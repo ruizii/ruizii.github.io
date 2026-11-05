@@ -1,25 +1,25 @@
 @use "./variables.scss" as *;
 
 // ---------------------------------------------------------------------------
-// Palette extras: difficulty is shown as violet intensity, not separate hues
+// Palette extras (Monoglow): difficulty is shown as accent intensity, not separate hues
 // ---------------------------------------------------------------------------
 :root {
-  --easy: #8b5cf6;
-  --medium: #7c3aed;
-  --hard: #6d28d9;
-  --insane: #5b21b6;
-  --card: #ffffff;
+  --easy: #047857;
+  --medium: #047857;
+  --hard: #047857;
+  --insane: #2a5e5e;
+  --card: #fafafa;
   --card-border: var(--lightgray);
   --shadow: 0 1px 2px rgba(24, 24, 27, 0.05), 0 4px 16px rgba(24, 24, 27, 0.04);
 }
 
 :root[saved-theme="dark"] {
-  --easy: #c4b5fd;
-  --medium: #a78bfa;
-  --hard: #a78bfa;
-  --insane: #c4b5fd;
-  --card: #1c1c1f;
-  --card-border: #2a2a2f;
+  --easy: #1bfd9c;
+  --medium: #1bfd9c;
+  --hard: #1bfd9c;
+  --insane: #deeeed;
+  --card: #121212;
+  --card-border: #262626;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 

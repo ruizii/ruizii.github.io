@@ -21,25 +21,25 @@ configuration:
       code: Geist Mono
     colors:
       lightMode:
-        light: "#fafafa"
-        lightgray: "#e4e4e7"
-        gray: "#8e8e98"
-        darkgray: "#3f3f46"
-        dark: "#18181b"
-        secondary: "#7c3aed"
-        tertiary: "#6d28d9"
-        highlight: rgba(124, 58, 237, 0.07)
-        textHighlight: rgba(167, 139, 250, 0.35)
+        light: "#f0f0f0"
+        lightgray: "#d4d4d4"
+        gray: "#707070"
+        darkgray: "#3a3a3a"
+        dark: "#222222"
+        secondary: "#047857"
+        tertiary: "#2e8a8a"
+        highlight: rgba(5, 150, 105, 0.08)
+        textHighlight: rgba(5, 150, 105, 0.25)
       darkMode:
-        light: "#161618"
-        lightgray: "#2a2a2f"
-        gray: "#71717a"
-        darkgray: "#d4d4d8"
-        dark: "#f4f4f5"
-        secondary: "#a78bfa"
-        tertiary: "#c4b5fd"
-        highlight: rgba(167, 139, 250, 0.1)
-        textHighlight: rgba(167, 139, 250, 0.3)
+        light: "#000000"
+        lightgray: "#262626"
+        gray: "#7a7a7a"
+        darkgray: "#cccccc"
+        dark: "#deeeed"
+        secondary: "#1bfd9c"
+        tertiary: "#b2d8d8"
+        highlight: rgba(27, 253, 156, 0.08)
+        textHighlight: rgba(27, 253, 156, 0.25)
 plugins:
   - source: "@quartz-community/created-modified-date"
     enabled: true
