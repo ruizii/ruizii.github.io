@@ -31,26 +31,24 @@ created: 2025-09-18
 - Database
 - `Chrome` remote debugging
 - Lateral movement
-- Editing `activate` script sourced by users on login
+- Editing global script sourced by users on login
 
 **🛠️ Tools:**  
 
-- `BurpSuite`
+- `Burp Suite`
 - `Penelope`
 
 **📚 Learned:**  
 
-- Never forget to test for authenticated functionality on a web app.
 - Try including `/proc/self/environ` to see environment variables via `LFI`.
 - Use `Chrome` for interacting with a remote debugging `Chrome` session. Simply navigate to `chrome://inspect`, add the IP and port of the session to the target discovery settings (if it's not already there) and click inspect. We should be able to interact with a remote browser session.
-- Read even scripts that are sourced on login like `/etc/bash.bashrc`.
+- Read scripts that are sourced on login like `/etc/bash.bashrc`.
 
 ----
 
 ## 🌐 Port Scan
 
 - **TCP**: 22, 80
-- **UDP**: None
 
 ---
 
@@ -68,11 +66,7 @@ Looks like a custom-made login panel, and when submitting an `SQLi` payload I ge
 
 ![[Pasted image 20250917130859.png]]
 
-Let's try `sqlmap`.
-
 Apparently it is not vulnerable to `SQL` injection, and the error was just a timeout. Fuzzing for subdomains and directories found nothing, so let's create an account.
-
-I also tried `SQL` injection on the cookies, since they triggered the same `Python` `SQL` error, but they weren't vulnerable. Next, I explored the app's functionality with `BurpSuite` capturing the requests.
 
 I first added a password:
 
@@ -98,42 +92,20 @@ Got `LFI`.
 
 ## 🪜 Foothold
 
-I included `/etc/hosts` and found this:
-
-```
-127.0.0.1 localhost superpass.htb test.superpass.htb
-127.0.1.1 agile
-
-# The following lines are desirable for IPv6 capable hosts
-::1     ip6-localhost ip6-loopback
-fe00::0 ip6-localnet
-ff00::0 ip6-mcastprefix
-ff02::1 ip6-allnodes
-ff02::2 ip6-allrouters
-```
-
-This revealed the subdomain `test.superpass.htb`, which I added to `/etc/hosts`.
-
-It didn't lead anywhere, so I moved on.
-
-I read up on `Flask` and `Werkzeug`. When debug mode is enabled (like on this web app), we may be able to access the debug console and run arbitrary `Python` commands. I just clicked the console icon on one of the lines of the stack trace and got this message:
+When debug mode is enabled, we may be able to access the debug console and run arbitrary `Python` commands. I just clicked the console icon on one of the lines of the stack trace and got this message:
 
 ![[Pasted image 20250918010404.png]]
 
-Researching this PIN, I found we can forge one and get access to the console. I found [this](https://book.hacktricks.wiki/en/network-services-pentesting/pentesting-web/werkzeug.html) article from `HackTricks` to exploit this.
-
-![[Pasted image 20250918010514.png]]
-
-Forging the PIN requires values from the environment, and after several hours of trying to read them through the `LFI`, I remembered `/proc/self/environ` from an article on `LFI`. I included it and got this:
+Researching this PIN, I found we can forge one and get access to the console. I found [this article](https://book.hacktricks.wiki/en/network-services-pentesting/pentesting-web/werkzeug.html) from `HackTricks` with the required information to exploit this. Forging the PIN requires values from the environment, so I included `/proc/self/environ` and got this response:
 
 ![[Pasted image 20250918011512.png]]
 
 We got the environment variables of the current process, including the path to the app's config file.
 
 >[!tip]
->The `/proc/self/` directory is a link to the current process.
+>`/proc/self/` is a symlink to the current process' `/proc/` directory.
 
-The config file was not needed, but still, it's very good to know about `/proc/self/environ`. I ended up using the code in the article and filling in the target's values. [This](https://www.youtube.com/watch?v=6BWaea0nfE0) video explains that the values can change if the app is running on `gunicorn`, which ours is. This is the final, working code (got the user from `/proc/self/environ` and the path from the crash message).
+I ended up using the code in the article and filling in the target's values. [This video](https://www.youtube.com/watch?v=6BWaea0nfE0) explains that the values can change if the app is running on `gunicorn`, which the target is. This is the final, working code (got the user from `/proc/self/environ` and the path from the crash message).
 
 ```shell
 import hashlib
@@ -185,7 +157,7 @@ print(rv)
 It printed this PIN:
 
 ```shell
-asdf@machine > python exploit.py
+python exploit.py
 204-471-235
 ```
 
@@ -264,7 +236,7 @@ We can run `sudoedit` as user `dev_admin` with 2 specific files.
 
 I found a `CVE` that lets us edit arbitrary files (in this case, any file writable by user `dev_admin`). It's `CVE-2023-22809`. Exploiting it only requires setting the `EDITOR` environment variable to `vim -- <file/path>` and then running the `sudoedit` command.
 
-I tried this with lots of files, even the `.ssh/id_rsa` of all users, but nothing came up. I gave up and took a hint from `HTB`. The hint was about a file that was sourced by every user on login. This was `/etc/bash.bashrc`. It had this line at the end:
+I tried this with lots of files, even the `.ssh/id_rsa` of all users, but nothing came up. I ended up taking a hint from `HTB`. The hint was about a file that was sourced by every user on login. This was `/etc/bash.bashrc`. It had this line at the end:
 
 ```shell
 <SNIP>
@@ -279,7 +251,7 @@ edwards@agile:~$ ls -l /app/venv/bin/activate
 -rw-rw-r-- 1 root dev_admin 1976 Sep 18 19:57 /app/venv/bin/activate
 ```
 
-`dev_admin` can edit it! I just did this:
+`dev_admin` can edit it. I ran this:
 
 ```shell
 edwards@agile:~$ export EDITOR="vim -- /app/venv/bin/activate"

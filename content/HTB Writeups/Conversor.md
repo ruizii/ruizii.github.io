@@ -30,19 +30,17 @@ created: 2025-10-26
 
 **🛠️ Tools:**  
 
-- `BurpSuite`
+- `Burp Suite`
 
 **📚 Learned:**  
 
 - On every target, identify the technologies in use (web server, frameworks, `OS`, etc.).
-- Keep improving at reading source code. It's extremely useful.
 
 ----
 
 ## 🌐 Port Scan
 
 - **TCP**: 22, 80
-- **UDP**: None
 
 ---
 
@@ -125,11 +123,7 @@ The structure of the project is this:
 └── uploads
 ```
 
->[!tip]
->The `users.db` file may be useful later.
-
 I decided to host an instance locally and try my theory. I uploaded a file, sent the request to Repeater, and changed the information of one of the files to this:
-
 
 ```
 <SNIP>
@@ -212,7 +206,7 @@ Next, I went back to the web app's users database. The app hashes passwords with
 `fismathack` is also a user on the server, so let's try to crack his password.
 
 ```
-.\hashcat.exe -a 0 -m 0 '5b5c3ac3a1c897c94caad48e6c71fdec' .\rockyou.txt -r .\rules\best66.rule -O -w 4
+hashcat -m 0 '5b5c3ac3a1c897c94caad48e6c71fdec' $ROCKYOU -O
 
 5b5c3ac3a1c897c94caad48e6c71fdec:Keepmesafeandwarm
 ```
@@ -282,7 +276,7 @@ Usage:
     --version   show version information
 ```
 
-The option `-h` does not exist, but it still gives me the information I need. `needrestart` is written in `Perl` and loads its configuration from `/etc/needrestart/needrestart.conf` by evaluating it as `Perl` code, so whatever is in the config file runs as root. The directory and the file are non-writable for my user, but the help menu shows option `-c`, which lets us pass our own config file. That's our way in.
+The script loads its configuration from `/etc/needrestart/needrestart.conf` by evaluating it as `Perl` code, so whatever is in the config file runs as root. The directory and the file are non-writable for my user, but the help menu shows option `-c`, which lets us pass our own config file. That's our way in.
 
 I created a file called `/tmp/pwn.conf` with this command:
 

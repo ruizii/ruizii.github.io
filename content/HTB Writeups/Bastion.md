@@ -25,8 +25,8 @@ created: 2025-11-22
 **🧩 Key Concepts:** 
 
 - Guest user access
-- `.vhd` files in remote share (virtual hard drives, mount with `guestmount`)
-- Dump `SAM` from backup drive (the 3 files in `C:\Windows\System32\config\`, then decrypt with `impacket-secretsdump`)
+- `.vhd` files in remote share
+- Dump `SAM` from backup drive
 - `mRemoteNG` admin password decrypt
 
 **🛠️ Tools:**  
@@ -46,7 +46,6 @@ created: 2025-11-22
 ## 🌐 Port Scan
 
 - **TCP**: 22, 135, 139, 445, 5985
-- **UDP**: None
 
 ---
 
@@ -140,19 +139,16 @@ l4mpje@BASTION C:\Users\L4mpje\Desktop>dir
 
 ## 🛡️ Privilege Escalation
 
-Enumerating the installed programs I found `mRemoteNG`. This program stores its passwords in each user's `AppData/Roaming/mRemoteNG` in a file called `confCons.xml`.
+Enumerating the installed programs I found `mRemoteNG`. This program stores its encrypted passwords in each user's `AppData/Roaming/mRemoteNG` in a file called `confCons.xml`. In this case, we had `C:\Users\L4mpje\AppData\Roaming\mRemoteNG\confCons.xml`.
 
-I used a `Python` script I found on `GitHub` that decrypts the `base64` encoded passwords in the file.
+I used a `Python` script I found on `GitHub` that decrypts the passwords in the file.
 
 ```shell
-$ python exp.py -s 'yhgmiu5bbuamU3qMUKc/uYDdmbMrJZ/JvR1kYe4Bhiu8bXybLxVnO0U9fKRylI7NcB9QuRsZVvla8esB'
-Password: bureaulampje
-
 $ python exp.py -s 'aEWNFV5uGcjUHF0uS17QTdT9kVqtKCPeoC0Nw5dmaPFjNQ2kt/zO5xDqE4HdVmHAowVRdC7emf7lWWA10dQKiw=='
 Password: thXLHM96BeKL0ER2
 ```
 
-The password below should belong to `Administrator`. Let's try it over `WinRM`.
+Let's try the password with the `Administrator` user over `WinRM`.
 
 ```
 $ evil-winrm-py -i 10.129.136.29 -u Administrator -p thXLHM96BeKL0ER2

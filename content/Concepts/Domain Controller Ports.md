@@ -1,4 +1,4 @@
-If a host has most of these ports open, it's almost certainly a Domain Controller.
+Domain Controllers typically have most of the ports in the table below open. The key ones are 88 and 389.
 
 | Port | Service |
 | --- | --- |
@@ -12,5 +12,5 @@ If a host has most of these ports open, it's almost certainly a Domain Controlle
 | 593 | `RPC` over `HTTP` |
 | 636 | `LDAPS` |
 | 3268 / 3269 | Global Catalog (`LDAP` / `LDAPS`) |
-| 5985 | `WinRM` (often open, not DC-specific) |
+| 5985 | `WinRM` |
 | 9389 | `AD` Web Services |

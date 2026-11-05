@@ -31,18 +31,11 @@ created: 2025-08-29
 
 - `Hashcat`
 
-**📚 Learned:**  
-
-- Use the email the ticketing system generated for the ticket ID to validate the account created in another service. This is known as a "Ticket Trick".
-- `Hashcat` rules are simple to use. We just need to know good password candidates.
-- Not used on this box, but remember we can [[Creating Custom Password List|create a custom wordlist using hashcat]] if we know candidate passwords.
-
 ----
 
 ## 🌐 Port Scan
 
 - **TCP**: 22, 80, 8065
-- **UDP**: —
 
 ---
 
@@ -66,11 +59,13 @@ This is an `osTicket` install. The website on port 8065 hosts a `Mattermost` web
 
 ![[Pasted image 20250826185750.png]]
 
+The `Mattermost` app required to confirm the account via email.
+
 Starting with the `osTicket` web app, I attempted to create a user with the credentials `test@test.com`:`12345678` and this happened:
 
 ![[Pasted image 20250826185913.png]]
 
-It asks for an account confirmation via email. I don't have a mailbox that can receive email from the `HackTheBox` machine. Instead, I tried creating a ticket.
+It asks for an account confirmation via email. I don't have a mailbox that can receive email from the machine. Instead, I tried creating a ticket.
 
 ![[Pasted image 20250826190014.png]]
 
@@ -116,7 +111,7 @@ After some initial enumeration I remembered this important detail from the `Matt
 
 ![[Pasted image 20250829121853.png]]
 
-This may be a hint for the box. If we manage to get some hashes we could crack them with a rule for a variation of the `PleaseSubscribe!` password. I looked for the `Mattermost` installation's config files, which might hold users or database credentials, and found the installation in `/opt`.
+This may be a hint for the box. If we manage to get some hashes we could crack them with a rule for a variation of the `PleaseSubscribe!` password. I looked for the `Mattermost` installation's config files, which might hold users or database credentials.
 
 ```shell
 maildeliverer@Delivery:/opt$ ls
@@ -166,7 +161,8 @@ We found the credentials for the database:
 
 - `mmuyser`:`Crack_The_MM_Admin_PW`
 
-The password itself is a hint too.
+>[!note]
+>The password itself is a hint too.
 
 Let's log into the database.
 
@@ -237,7 +233,7 @@ I created a wordlist with `PleaseSubscribe!` and used rules to try permutations 
 ```shell
 echo "PleaseSubscribe!" > wordlist.txt
 
-.\hashcat.exe -a 0 -m 3200 '$2a$10$VM6EeymRxJ29r8Wjkr8Dtev0O.1STWb4.4ScG.anuu7v0EFJwgjjO' .\wordlist.txt -r .\rules\best64.rule -O -w 4
+hashcat -m 3200 '$2a$10$VM6EeymRxJ29r8Wjkr8Dtev0O.1STWb4.4ScG.anuu7v0EFJwgjjO' wordlist.txt -r /usr/share/hashcat/rules/best66.rule -O
 
 $2a$10$VM6EeymRxJ29r8Wjkr8Dtev0O.1STWb4.4ScG.anuu7v0EFJwgjjO:PleaseSubscribe!21
 ```
