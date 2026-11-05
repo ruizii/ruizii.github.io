@@ -1,23 +1,23 @@
 @use "./variables.scss" as *;
 
 // ---------------------------------------------------------------------------
-// Palette extras (difficulty colors follow Hack The Box's conventions)
+// Palette extras: difficulty is shown as violet intensity, not separate hues
 // ---------------------------------------------------------------------------
 :root {
-  --easy: #3f7d00;
-  --medium: #b86e00;
-  --hard: #c62828;
-  --insane: #7b3fe4;
+  --easy: #8b5cf6;
+  --medium: #7c3aed;
+  --hard: #6d28d9;
+  --insane: #5b21b6;
   --card: #ffffff;
   --card-border: var(--lightgray);
   --shadow: 0 1px 2px rgba(24, 24, 27, 0.05), 0 4px 16px rgba(24, 24, 27, 0.04);
 }
 
 :root[saved-theme="dark"] {
-  --easy: #9fef00;
-  --medium: #ffaf00;
-  --hard: #ff5c5c;
-  --insane: #b98cff;
+  --easy: #c4b5fd;
+  --medium: #a78bfa;
+  --hard: #a78bfa;
+  --insane: #c4b5fd;
   --card: #1c1c1f;
   --card-border: #2a2a2f;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.25);
@@ -66,28 +66,12 @@ h4 {
       content: "~$ ";
       color: var(--gray);
     }
-    &::after {
-      content: "";
-      display: inline-block;
-      width: 0.55em;
-      height: 1.05em;
-      margin-left: 0.15em;
-      vertical-align: -0.15em;
-      background: var(--secondary);
-      animation: cursor-blink 1.1s steps(1) infinite;
-    }
   }
 }
 
 @keyframes cursor-blink {
   50% {
     opacity: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .page-title a::after {
-    animation: none;
   }
 }
 
@@ -289,17 +273,24 @@ h2[id$="box-info"] + .table-container > table {
   padding: 0.15rem 0.5rem;
   border-radius: 999px;
   border: 1px solid currentColor;
+  // Easy: outline, Medium: tinted, Hard/Insane: solid
   &.diff-easy {
     color: var(--easy);
+    border-color: color-mix(in srgb, var(--easy) 55%, transparent);
   }
   &.diff-medium {
     color: var(--medium);
+    background: color-mix(in srgb, var(--medium) 18%, transparent);
   }
-  &.diff-hard {
-    color: var(--hard);
+  &.diff-hard,
+  &.diff-insane {
+    color: var(--light);
+    background: var(--hard);
+    border-color: var(--hard);
   }
   &.diff-insane {
-    color: var(--insane);
+    background: var(--insane);
+    border-color: var(--insane);
   }
 }
 
@@ -319,10 +310,11 @@ h2[id$="box-info"] + .table-container > table {
     background: var(--gray);
   }
   .os-linux::before {
-    background: #f5b400;
+    background: var(--secondary);
   }
   .os-windows::before {
-    background: #3b9bff;
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px var(--secondary);
   }
   .box-date {
     font-family: var(--codeFont);
