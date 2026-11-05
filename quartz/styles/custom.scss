@@ -1,3 +1,497 @@
 @use "./variables.scss" as *;
 
-// put your custom CSS here!
+// ---------------------------------------------------------------------------
+// Palette extras (difficulty colors follow Hack The Box's conventions)
+// ---------------------------------------------------------------------------
+:root {
+  --easy: #3f7d00;
+  --medium: #b86e00;
+  --hard: #c62828;
+  --insane: #7b3fe4;
+  --card: #ffffff;
+  --card-border: var(--lightgray);
+  --shadow: 0 1px 2px rgba(24, 24, 27, 0.05), 0 4px 16px rgba(24, 24, 27, 0.04);
+}
+
+:root[saved-theme="dark"] {
+  --easy: #9fef00;
+  --medium: #ffaf00;
+  --hard: #ff5c5c;
+  --insane: #b98cff;
+  --card: #1c1c1f;
+  --card-border: #2a2a2f;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+// ---------------------------------------------------------------------------
+// Typography & global polish
+// ---------------------------------------------------------------------------
+body {
+  -webkit-font-smoothing: antialiased;
+  font-weight: 300;
+  letter-spacing: 0.005em;
+}
+
+h1,
+h2,
+h3,
+h4,
+.article-title {
+  font-weight: 500 !important;
+}
+
+strong,
+b {
+  font-weight: 500;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  letter-spacing: -0.01em;
+}
+
+::selection {
+  background: var(--textHighlight);
+}
+
+// Site title as a terminal prompt with a blinking cursor
+.page-title {
+  font-size: 1.35rem;
+  font-family: var(--titleFont), var(--codeFont) !important;
+  a {
+    color: var(--secondary);
+    &::before {
+      content: "~$ ";
+      color: var(--gray);
+    }
+    &::after {
+      content: "";
+      display: inline-block;
+      width: 0.55em;
+      height: 1.05em;
+      margin-left: 0.15em;
+      vertical-align: -0.15em;
+      background: var(--secondary);
+      animation: cursor-blink 1.1s steps(1) infinite;
+    }
+  }
+}
+
+@keyframes cursor-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-title a::after {
+    animation: none;
+  }
+}
+
+// Tags as chips
+a.internal.tag-link {
+  font-family: var(--codeFont);
+  font-size: 0.8em;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--card-border);
+  background: var(--highlight);
+}
+
+// Inline code: subtle tint instead of a flat gray block
+:not(pre) > code {
+  background: var(--highlight);
+  border: 1px solid var(--card-border);
+  padding: 0.05rem 0.3rem;
+}
+
+pre {
+  background: var(--card) !important;
+  border-color: var(--card-border);
+  box-shadow: var(--shadow);
+}
+
+hr {
+  background: linear-gradient(90deg, transparent, var(--lightgray), transparent);
+}
+
+// Writeup screenshots: centered with a subtle border (mirrors the Obsidian center/border snippets)
+article img {
+  display: block;
+  margin: 1rem auto;
+  max-width: 100%;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+// Callouts: a touch rounder
+.callout {
+  border-radius: 8px;
+}
+
+// ---------------------------------------------------------------------------
+// Writeup pages
+// ---------------------------------------------------------------------------
+
+// The "📅 date" line duplicates the date shown under the title
+body[data-slug^="htb-writeups/"]:not([data-slug="htb-writeups/index"]) article > .markdown-preview-view > p:first-child {
+  display: none;
+}
+
+// Section headings get an accent bar
+body[data-slug^="htb-writeups/"] article h2 {
+  padding-left: 0.6rem;
+  border-left: 3px solid var(--secondary);
+}
+
+// Box Info table as a card
+h2[id$="box-info"] + .table-container > table {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  min-width: min(100%, 360px);
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+
+  th,
+  td {
+    padding: 0.35rem 1rem;
+    border: none;
+    text-align: left;
+    font-weight: normal;
+  }
+  thead th {
+    border-bottom: 1px solid var(--card-border);
+    background: var(--highlight);
+    font-weight: 500;
+  }
+  td:first-child,
+  th:first-child {
+    color: var(--gray);
+  }
+  tbody tr + tr td {
+    border-top: 1px solid var(--card-border);
+  }
+  code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--dark);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Homepage
+// ---------------------------------------------------------------------------
+.home-intro {
+  color: var(--darkgray);
+  margin-top: 0;
+}
+
+.home-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.25rem 0 1.5rem;
+
+  .stat {
+    font-size: 0.85rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid var(--card-border);
+    background: var(--card);
+    color: var(--darkgray);
+    b {
+      color: var(--dark);
+      margin-right: 0.15rem;
+    }
+    &.diff-easy b {
+      color: var(--easy);
+    }
+    &.diff-medium b {
+      color: var(--medium);
+    }
+    &.diff-hard b {
+      color: var(--hard);
+    }
+    &.diff-insane b {
+      color: var(--insane);
+    }
+  }
+}
+
+.box-grid,
+.concept-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.9rem;
+  margin: 0 0 2rem;
+}
+
+.box-card,
+.concept-card,
+.section-card {
+  color: var(--darkgray) !important;
+  background: var(--card) !important;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  text-decoration: none;
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: var(--secondary);
+    box-shadow:
+      var(--shadow),
+      0 0 0 3px var(--highlight);
+  }
+}
+
+.box-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.9rem 1rem 1rem;
+  line-height: 1.3;
+}
+
+.box-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.box-name {
+  font-family: var(--headerFont);
+  font-weight: 500;
+  font-size: 1.1rem;
+  color: var(--dark);
+}
+
+.diff {
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  &.diff-easy {
+    color: var(--easy);
+  }
+  &.diff-medium {
+    color: var(--medium);
+  }
+  &.diff-hard {
+    color: var(--hard);
+  }
+  &.diff-insane {
+    color: var(--insane);
+  }
+}
+
+.box-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--gray);
+
+  .os::before {
+    content: "";
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    margin-right: 0.4rem;
+    border-radius: 50%;
+    background: var(--gray);
+  }
+  .os-linux::before {
+    background: #f5b400;
+  }
+  .os-windows::before {
+    background: #3b9bff;
+  }
+  .box-date {
+    font-family: var(--codeFont);
+    font-size: 0.8rem;
+  }
+}
+
+.box-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: auto;
+
+  .box-tag {
+    font-family: var(--codeFont);
+    font-size: 0.7rem;
+    padding: 0.05rem 0.4rem;
+    border-radius: 999px;
+    background: var(--highlight);
+    color: var(--darkgray);
+    &::before {
+      content: "#";
+      color: var(--gray);
+    }
+    &.more::before {
+      content: "";
+    }
+  }
+}
+
+.concept-grid {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+
+.concept-card {
+  display: block;
+  padding: 0.75rem 1rem;
+  font-weight: 400;
+  color: var(--dark) !important;
+  &::before {
+    content: "› ";
+    color: var(--secondary);
+  }
+}
+
+@media all and ($mobile) {
+  .box-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .box-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+// The homepage's "modified / read time" line is meaningless
+body[data-slug="index"] .content-meta,
+body[data-slug="htb-writeups/index"] .content-meta,
+body[data-slug="concepts/index"] .content-meta {
+  display: none;
+}
+
+@media all and ($mobile) {
+  .page-title {
+    font-size: 1.1rem;
+    white-space: nowrap;
+  }
+}
+
+// Section page: the generated grid replaces Quartz's plain file listing
+body[data-slug="htb-writeups/index"] .page-listing {
+  display: none;
+}
+
+// ---------------------------------------------------------------------------
+// Homepage hero & sections
+// ---------------------------------------------------------------------------
+body[data-slug="index"] .article-title {
+  display: none;
+}
+
+.hero {
+  margin: 0.5rem 0 1.5rem;
+
+  .hero-cmd {
+    font-family: var(--codeFont);
+    font-size: 0.9rem;
+    color: var(--gray);
+    margin: 0;
+  }
+  .hero-name {
+    font-family: var(--titleFont);
+    letter-spacing: -0.03em;
+    font-size: clamp(2.4rem, 6vw, 3.4rem);
+    line-height: 1.1;
+    margin: 0.3rem 0 0.4rem;
+    color: var(--dark);
+    font-weight: 600;
+    &::after {
+      content: "";
+      display: inline-block;
+      width: 0.5em;
+      height: 0.9em;
+      margin-left: 0.12em;
+      vertical-align: -0.05em;
+      background: var(--secondary);
+      animation: cursor-blink 1.1s steps(1) infinite;
+    }
+  }
+  .hero-tag {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--secondary);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero .hero-name::after {
+    animation: none;
+  }
+}
+
+.section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.9rem;
+  margin: 1.5rem 0 1rem;
+}
+
+.section-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1.1rem 1.2rem;
+  border-left: 3px solid var(--secondary) !important;
+
+  .section-title {
+    font-family: var(--headerFont);
+    font-weight: 500;
+    font-size: 1.2rem;
+    color: var(--dark);
+    &::after {
+      content: " →";
+      color: var(--secondary);
+    }
+  }
+  .section-desc {
+    font-size: 0.9rem;
+    color: var(--gray);
+  }
+}
+
+.see-all {
+  margin: -1rem 0 2rem;
+  text-align: right;
+  a {
+    font-weight: 500;
+    background: none !important;
+  }
+}
+
+// Keep navigation as light as the body text
+.sidebar a,
+.sidebar button,
+.sidebar .folder-title,
+.breadcrumb-container a,
+.backlinks a,
+.toc a {
+  font-weight: 400 !important;
+}

@@ -12,3 +12,6 @@ replit.nix
 .quartz/
 quartz/cli/tui/dist/
 .turbo/
+
+# Obsidian attachments copied by mistake; site images live in content/img
+/img/

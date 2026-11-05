@@ -43,6 +43,12 @@ export default (() => {
       <head>
         <title>{title}</title>
         <meta charSet="utf-8" />
+        {/* Stop the explorer from scrolling the whole page on first visit, and default to dark mode */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{sessionStorage.getItem("explorerScrollTop")||sessionStorage.setItem("explorerScrollTop","0");localStorage.getItem("theme")||localStorage.setItem("theme","dark")}catch(e){}`,
+          }}
+        />
         {coreStylesheet && <link rel="preload" href={coreStylesheet} as="style" />}
         {coreScript && coreScript.contentType === "external" && (
           <link rel="preload" href={coreScript.src} as="script" />
