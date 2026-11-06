@@ -33,23 +33,17 @@ created: 2025-09-12
 
 - `hashcat`
 
-**📚 Learned:**  
-
-- Try `NoSQL` injection.
-- Port 9093 (metrics) didn't serve any purpose on this machine.
-
 ----
 
 ## 🌐 Port Scan
 
 - **TCP**: 22, 80, 9093
-- **UDP**: None
 
 ---
 
 ## 🔍 Enumeration
 
-Port 9093 serves `prometheus` metrics for the `Go` backend, but nothing useful. The main site redirects to `http://shoppy.htb`. I added that to `/etc/hosts`. Fuzzing for subdomains with [this](https://github.com/n0kovo/n0kovo_subdomains) excellent wordlist, I found `mattermost.shoppy.htb`. I added that to `/etc/hosts`. It's a login page for a `mattermost` chat. I had no credentials and found no vulnerabilities, so I started enumerating the main site.
+Port 9093 serves `prometheus` metrics for the `Go` backend, but nothing useful. The main site redirects to `http://shoppy.htb`. I added that to `/etc/hosts`. Fuzzing for subdomains, I found `mattermost.shoppy.htb`. I added that to `/etc/hosts`. It's a login page for a `mattermost` chat. I had no credentials and found no vulnerabilities, so I started enumerating the main site.
 
 I navigated to `/admin` and got redirected to `/login`, which had this login panel:
 
@@ -61,7 +55,7 @@ After trying some payloads, this one worked.
 
 ![[Pasted image 20250912112910.png]]
 
-A username is required; without one we get the invalid credentials error message.
+A username is required. Without one we get the invalid credentials error message.
 
 ![[Pasted image 20250912112951.png]]
 
@@ -69,7 +63,7 @@ I swapped the cookies with Cookie Editor and navigated to `/admin`.
 
 ![[Pasted image 20250912113217.png]]
 
-The admin panel has a single function: searching users. The search term is sent to the backend in the `username` `URL` parameter.
+The admin panel has a single function, which is to search for users. The search term is sent to the backend through the `username` `URL` parameter.
 
 ![[Pasted image 20250912113314.png]]
 
@@ -87,7 +81,7 @@ This hints at injection. `sqlmap` found nothing, so I tried `NoSQL` injection, w
 
 ![[Pasted image 20250912113833.png]]
 
-We got users `admin` and `josh`, along with their hashes, which look like `MD5`. They're probably the key to the `mattermost` chat, so I tried to crack them.
+We got users `admin` and `josh`, along with their hashes, which look like `MD5`. They're probably for the `mattermost` chat, so I tried to crack them.
 
 `josh`'s password cracked, but `admin`'s didn't.
 
@@ -101,14 +95,14 @@ While enumerating the chat, I found this:
 
 ![[Pasted image 20250912114200.png]]
 
-These are credentials, so I tried them over `SSH`.
+I tried these credentials over `SSH`.
 
 - `jaeger`:`Sh0ppyBest@pp!`
 
 And they worked. Got user.
 
 ```shell
-asdf >> ssh jaeger@shoppy.htb
+ssh jaeger@shoppy.htb
 jaeger@shoppy.htb's password: 
 jaeger@shoppy:~$ ls
 Desktop  Documents  Downloads  Music  Pictures  Public  ShoppyApp  shoppy_start.sh  Templates  user.txt  Videos
@@ -153,7 +147,7 @@ $ whoami
 deploy
 ```
 
-The user is a member of the `docker` group, which is effectively root.
+The user is a member of the `docker` group, which is an easy path to root.
 
 ```shell
 $ groups

