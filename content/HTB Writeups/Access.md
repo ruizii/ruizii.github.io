@@ -38,7 +38,6 @@ created: 2025-08-30
 ## 🌐 Port Scan
 
 - **TCP**: 21, 23, 80
-- **UDP**: None
 
 ---
 

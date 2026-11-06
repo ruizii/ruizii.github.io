@@ -29,7 +29,7 @@ created: 2026-03-17
 - `ImageMagick` `RCE`
 - `Git` repo inspection
 - Binary with arbitrary read permissions
-- Extremely hard machine, insane-level foothold
+- Very hard machine, insane-level foothold
 
 **🛠️ Tools:**  
 
@@ -40,7 +40,7 @@ created: 2026-03-17
 **📚 Learned:**  
 
 - `sqlmap` can do second-order `SQL` injection.
-- Always test `SQL` injection manually first, and then we can nudge `sqlmap` with parameters like `--prefix=<prefix>` and `--suffix=<suffix>`. This can make the difference between a successful `SQL` injection and a failure.
+- Always test `SQL` injection manually first, and then we can nudge `sqlmap` with parameters like `--prefix=<prefix>` and `--suffix=<suffix>`.
 - Testing `API` versions.
 - `ImageMagick`'s `PHP` library `Imagick` has a vulnerability involving a partial write the library makes when using the `msl` scheme, which can be used to write a web shell.
 - Read a file byte by byte using a hash-checking binary with elevated file read capabilities.
@@ -51,7 +51,6 @@ created: 2026-03-17
 ## 🌐 Port Scan
 
 - **TCP**: 22, 80
-- **UDP**: None
 
 ---
 
@@ -74,7 +73,7 @@ Also, the `genres` field is the only user-modifiable input I found on the websit
 Testing manually, I found space was a bad character, so I had to use tabs instead. I wrote a simple `sqlmap` tamper script, `space2tab`. I tested by checking for errors: if the request to `/feed` returned no error, the injected query was valid. By doing this thoroughly I found that it was doing something like: `...IN ('a', 'b', 'c')...`, so I had to close the string and the parentheses. I also found that the comment character allowed was `#`. We can tell `sqlmap` to do all this with its advanced flags.
 
 ```shell
-sqlmap -r req.txt --second-req=req2.txt --dbms=mysql --batch --no-cast --technique=U --prefix="')" --suffix='#' --tamper=space2tab --flush-session
+sqlmap -r req.txt --second-req=req2.txt --dbms=mysql --batch --no-cast --technique=U --prefix="')" --suffix='#' --tamper=space2tab
 ```
 
 Here I have a `req.txt` file, which is the request that sets the `genre` field of our user to the `SQLi` payload, and `req2.txt` is the request that checks `/feed`. `sqlmap` uses the second request to check the result of the injection.
@@ -248,8 +247,8 @@ for i in range(1, 200):
 print(f"\n[+] Result: {known.decode(errors='replace')}")
 ```
 
->[!tip]
->I could have read `root`'s `SSH` key and logged in as `root`, but reading the flag directly was enough.
+>[!note]
+>I could also have read `root`'s `SSH` key and logged in as `root`.
 
 And got the root flag.
 

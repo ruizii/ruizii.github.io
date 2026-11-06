@@ -31,7 +31,7 @@ created: 2025-09-19
 
 **🛠️ Tools:**  
 
-- `BurpSuite`
+- `Burp Suite`
 - `wpscan`
 
 **📚 Learned:**  
@@ -49,7 +49,6 @@ created: 2025-09-19
 ## 🌐 Port Scan
 
 - **TCP**: 80
-- **UDP**: —
 
 ---
 
@@ -64,7 +63,7 @@ In the user agent table there is a `pressed.htb` domain. I added that to `/etc/h
 I started with `wpscan`.
 
 ```shell
-wpscan --url 'http://pressed.htb' --enumerate ap --plugins-detection mixed --api-token GYkRz6jqkrzj9EBYT30UJJQjsqdfaEwhsv6JkrCT4Oo
+wpscan --url 'http://pressed.htb' --enumerate ap --plugins-detection mixed --api-token <REDACTED>
 ```
 
 It found lots of things. I will investigate these plugins.
@@ -420,7 +419,7 @@ I tried getting a reverse shell but it didn't work. I suspected a firewall and f
 
 The server only accepts inbound connections on port 80 and drops all other traffic, including every new outbound connection, so reverse shells can't get out.
 
-After a long session of enumeration I found that the `Polkit` version was old and vulnerable to `PwnKit`. [This](https://github.com/ly4k/PwnKit) exploit works without an interactive shell, which is all we have. I compiled it, encoded it as `base64`, and uploaded it using `xmlrpc.php`.
+After a long session of enumeration I found that the `Polkit` version was old and vulnerable to `PwnKit`. [This exploit](https://github.com/ly4k/PwnKit) works without an interactive shell. I compiled it, encoded it as `base64`, and uploaded it using `xmlrpc.php`.
 
 ```shell
 $ command cat PwnKit | base64 -w0
