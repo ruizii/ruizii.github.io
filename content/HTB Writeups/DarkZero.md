@@ -111,7 +111,7 @@ darkzero-ext\svc_sql
 Got `RCE` on `DC02.darkzero.ext`.
 
 >[!tip]
->Use double quotes for hostnames with dots (`.`) on them.
+>Use double quotes for hostnames with dots (`.`) in them.
 
 I decided to get a `meterpreter` shell as it could probably make this easier. I used the web delivery module.
 
@@ -266,7 +266,7 @@ We have a trust from `darkzero.ext` to `darkzero.htb`. We already compromised `d
 
 ![[Pasted image 20251008224054.png]]
 
-I got stuck here and needed several hints. The solution involves forcing `DC01` to authenticate to our compromised `DC02` and capture the machine account's `TGT`, which can be used to perform a `DCSync` attack.
+I got stuck here and needed several hints. The solution involves forcing `DC01` to authenticate to our compromised `DC02` and capturing the machine account's `TGT`, which can be used to perform a `DCSync` attack.
 
 I uploaded `Rubeus.exe` from our `NT AUTHORITY\SYSTEM` session and ran the following command:
 

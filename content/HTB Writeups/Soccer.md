@@ -116,7 +116,7 @@ www-data@soccer:~$ cat /etc/passwd
 <SNIP>
 ```
 
-After a lot of enumeration, I found this in `nginx`'s config files':
+After a lot of enumeration, I found this in `nginx`'s config files:
 
 ```shell
 www-data@soccer:~$ ls /etc/nginx/sites-enabled/

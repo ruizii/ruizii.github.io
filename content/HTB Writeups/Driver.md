@@ -35,7 +35,6 @@ created: 2025-09-06
 **📚 Learned:**  
 
 - [[Interacting with Users#SCF on a File Share|NetNTLMv2 hash stealing with malicious .scf file on file share reviewed by user]].
-- Read the `PowerShell` history file, it may contain clues.
 - If a `metasploit` module hangs or errors out, we can try migrating to the `explorer.exe` process. Use `ps` and `migrate <PID>`. This happens when the session runs in a non-interactive process, and `explorer.exe` is always interactive.
 
 ----

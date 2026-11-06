@@ -432,7 +432,7 @@ I uploaded it as a `.jpg` file because of the extension allowlist.
 
 The file name is `example3.jpg`. We have the path in the upload response.
 
-I decided to use my web shell handler for the `chmod +x ...` to avoid manually `URL` encoding in `BurpSuite`.
+I decided to use my web shell handler for the `chmod +x ...` to avoid manually `URL` encoding in `Burp Suite`.
 
 ```shell
 RCE> chmod +x /var/www/html/wp-content/uploads/2025/09/example3.jpg

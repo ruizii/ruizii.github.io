@@ -59,7 +59,7 @@ This is an `osTicket` install. The website on port 8065 hosts a `Mattermost` web
 
 ![[Pasted image 20250826185750.png]]
 
-The `Mattermost` app required to confirm the account via email.
+The `Mattermost` app required email confirmation for new accounts.
 
 Starting with the `osTicket` web app, I attempted to create a user with the credentials `test@test.com`:`12345678` and this happened:
 

