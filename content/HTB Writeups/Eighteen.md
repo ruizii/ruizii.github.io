@@ -24,13 +24,12 @@ created: 2025-11-18
 
 **🧩 Key Concepts:** 
 
-- Assumed breach with credentials: `kevin`:`iNa2we6haRj2gaw!`
 - `AD`
+- Assumed breach with credentials: `kevin`:`iNa2we6haRj2gaw!`
 - `MSSQL` impersonation
 - Username enumeration via `RID` brute force
 - Password reuse
-- `BadSuccessor` (new 2025 `CVE` targeting `dMSA`s, hard to get working)
-- After impersonating our malicious `dMSA`, get its `TGT` with `impacket-getST`, load it with `export KRB5CCNAME=...` and do `DCSync`
+- `BadSuccessor` (2025 `CVE` targeting `dMSA`s, hard to get working)
 
 
 **🛠️ Tools:**  
@@ -41,12 +40,10 @@ created: 2025-11-18
 
 **📚 Learned:**  
 
-- `ligolo-ng` has a hardcoded IP range of `240.0.0.0/4` that will be used to reach all internal ports on the machine running the agent. Just tunnel it to a route with `240.0.0.1/32`.
+- `ligolo-ng` has a hardcoded IP range of `240.0.0.0/4` that can be used to reach all internal ports on the machine running the agent. Just tunnel it to a route with `240.0.0.1/32`.
 - `nxc smb ... --generate-krb5 <file>` is very useful. Its output can replace the whole contents of `/etc/krb5.conf`.
 - It's possible to use `--rid-brute` with `mssql`.
-- Lots of `Kerberos` authentication.
 - Use `-k` and `--use-kcache` to use the `.ccache` file for logging in with `NetExec` without providing a username or password.
-- For `DCSync`, we can also use `nxc smb ... --ntds` and the result is the same as with `impacket-secretsdump`, just with prettier output.
 - Use `impacket-getST` to get a service ticket for an impersonated user.
 
 ----
@@ -54,7 +51,6 @@ created: 2025-11-18
 ## 🌐 Port Scan
 
 - **TCP**: 80, 1433, 5985
-- **UDP**: None
 
 ---
 
@@ -131,9 +127,9 @@ Mode                 LastWriteTime         Length Name
 
 ## 🛡️ Privilege Escalation
 
-This was the hardest part. I first enumerated the domain with `SharpHound`, but nothing interesting showed up, so I enumerated the user's permissions. Our user was in a group named `IT`. I enumerated the permissions of that group with `Get-DomainOU | Get-DomainObjectACL ...` and found that the `IT` group had `CreateChild` permissions on the `Staff` `OU`. This makes the domain vulnerable to `BadSuccessor`.
+This was the hardest part. I first enumerated the domain with `BloodHound`, but nothing interesting showed up, so I enumerated the user's permissions. Our user was in a group named `IT`. I enumerated the permissions of that group with `Get-DomainOU | Get-DomainObjectACL ...` and found that the `IT` group had `CreateChild` permissions on the `Staff` `OU`. This makes the domain vulnerable to `BadSuccessor`.
 
-I had to connect over `Kerberos` for this, and the ports were closed, so I used a `ligolo-ng` trick to reach every local port on the host running the agent: add the route `240.0.0.1/32` to the tunnel interface, and that address reaches all of the target's internal ports. Then I pointed the domain at it in `/etc/hosts`: `240.0.0.1 eighteen.htb dc01.eighteen.htb`.
+I had to connect over `Kerberos` for this, and the ports were closed, so I used a `ligolo-ng` feature to reach every local port on the host running the agent: add the route `240.0.0.1/32` to the tunnel interface, and that address reaches all of the target's internal ports. Then I pointed the domain at it in `/etc/hosts`: `240.0.0.1 eighteen.htb dc01.eighteen.htb`.
 
 I got a ticket with `--generate-tgt <file>`.
 
@@ -149,7 +145,7 @@ export KRB5CCNAME=adam.ccache
 evil-winrm -i dc01.eighteen.htb -r eighteen.htb
 ```
 
-And I managed to log in via `Kerberos`.
+And I managed to log in using `Kerberos`.
 
 The exploit is `BadSuccessor`, which abuses the new `dMSA` concept from Windows Server 2025. I downloaded an exploit, compiled it in Visual Studio and ran this command:
 
@@ -157,7 +153,7 @@ The exploit is `BadSuccessor`, which abuses the new `dMSA` concept from Windows 
 .\BadSuccessor.exe escalate -targetOU "OU=Staff,DC=eighteen,DC=htb" -dmsa test_dmsa -targetUser "CN=Administrator,CN=Users,DC=eighteen,DC=htb" -dnshostname DC01 -user adam.scott -dc-ip 10.129.8.217
 ```
 
-It created my malicious `dMSA` that impersonates Administrator. Now I need to get a ticket for it. In the output of that command there were `Rubeus` commands to continue with the exploit but they didn't work for me, so I switched to Linux tools. I used `impacket-getST`.
+It created my malicious `dMSA` that impersonates Administrator. Now I need to get a ticket for it. In the output of that command there were `Rubeus` commands to continue with the exploit but they didn't work for me, so I switched to Linux tools.
 
 ```shell
 $ getST.py -impersonate 'test_dmsa$' -dmsa -k -no-pass eighteen.htb/adam.scott -self
