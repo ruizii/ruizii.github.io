@@ -1,6 +1,6 @@
 ## Theory
 
-`ASREProast` is a technique used to retrieve `TGT`s for users with the setting "Do not require `Kerberos` pre-authentication" enabled without knowing their passwords. It's then possible to crack the ticket to retrieve the user's password. We can do this with `NetExec`.
+AS-REP Roasting targets accounts with Kerberos pre-authentication disabled. It lets us request an AS-REP for the user without their password, then try to crack it offline to recover the password. We can do this with NetExec.
 
 >[!tip]
 >It's worth trying at the start of every `AD` engagement, since it's so simple.
